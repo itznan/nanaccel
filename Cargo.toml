@@ -3,6 +3,10 @@ name = "nanaccel"
 version = "0.1.0"
 edition = "2024"
 
+[[bin]]
+name = "check_symphonia"
+path = "scratch/check_symphonia.rs"
+
 [dependencies]
 bytes = "1.12.0"
 libloading = "0.9.0"
@@ -10,6 +14,7 @@ mp4 = "0.14.0"
 nvenc = "0.1.0"
 openh264 = "0.9.3"
 symphonia = { version = "0.6.0", features = ["all"] }
+symphonia-core = "0.6.0"
 windows = { version = "0.62", features = [
     "Win32_Foundation",
     "Win32_Graphics_Direct3D",
