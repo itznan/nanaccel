@@ -35,21 +35,21 @@ jobs:
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force -Path release-pkg
-          Copy-Item target/release/nann.exe release-pkg/
+          Copy-Item target/release/nanaccel.exe release-pkg/
           if (Test-Path LICENSE) { Copy-Item LICENSE release-pkg/ }
           if (Test-Path README.md) { Copy-Item README.md release-pkg/ }
-          Compress-Archive -Path release-pkg/* -DestinationPath nann-windows-x86_64.zip
+          Compress-Archive -Path release-pkg/* -DestinationPath nanaccel-windows-x86_64.zip
           
           # Generate SHA256 checksum for download verification
-          $hash = (Get-FileHash nann-windows-x86_64.zip -Algorithm SHA256).Hash
-          "$hash  nann-windows-x86_64.zip" | Out-File -FilePath nann-windows-x86_64.zip.sha256 -Encoding ascii
+          $hash = (Get-FileHash nanaccel-windows-x86_64.zip -Algorithm SHA256).Hash
+          "$hash  nanaccel-windows-x86_64.zip" | Out-File -FilePath nanaccel-windows-x86_64.zip.sha256 -Encoding ascii
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            nann-windows-x86_64.zip
-            nann-windows-x86_64.zip.sha256
+            nanaccel-windows-x86_64.zip
+            nanaccel-windows-x86_64.zip.sha256
           draft: false
           prerelease: false
           generate_release_notes: true

@@ -1,8 +1,8 @@
-# nann 🚀
+# NanAccel 🚀
 
-**nann** is a next-generation, high-performance video CLI tool and engine built in pure Rust, designed as a lightweight and zero-dependency competitor to FFmpeg for hardware-accelerated video decoding, rendering, and encoding on NVIDIA GPUs. 
+**NanAccel** is a next-generation, high-performance video CLI tool and engine built in pure Rust, designed as a lightweight and zero-dependency competitor to FFmpeg for hardware-accelerated video decoding, rendering, and encoding on NVIDIA GPUs. 
 
-Unlike other software that wraps or spawns FFmpeg subprocesses, **nann** is compiled into a single standalone binary that interacts directly with Windows Media Foundation (WMF), Direct3D 11, and NVIDIA NVENC APIs at the native C interface level.
+Unlike other software that wraps or spawns FFmpeg subprocesses, **NanAccel** is compiled into a single standalone binary that interacts directly with Windows Media Foundation (WMF), Direct3D 11, and NVIDIA NVENC APIs at the native C interface level.
 
 ---
 
@@ -19,45 +19,37 @@ Unlike other software that wraps or spawns FFmpeg subprocesses, **nann** is comp
 A clean, standardized Rust and Git repository layout optimized for collaborative development:
 
 ```text
-nann/
+nanaccel/
 ├── .github/
 │   └── workflows/
 │       └── ci.yml          # GitHub Actions CI workflow for builds & style checks
 ├── src/
 │   ├── main.rs             # CLI router and live GPU telemetry reporter
-│   ├── gpu_pipeline.rs     # Core GPU pipeline (WMF NVDEC -> D3D11 VPP -> NVENC)
+│   ├── gpu_pipeline/       # Direct WMF NVDEC -> D3D11 VPP -> NVENC GPU pipelines
+│   ├── commands/           # Modular subcommand parsing and handler functions
 │   └── mux.rs              # Native MP4 muxer for wrapping GPU stream packets
 ├── .gitattributes          # Line-ending normalization and binary files handling
-├── .gitignore              # Standard Rust/Cargo git ignores and video file exclusions
-├── Cargo.toml              # Rust project manifest & external crate dependencies
-├── README.md               # Project documentation and specifications
-└── rustfmt.toml            # Code styling rules for cargo fmt
+├── .gitignore              # Dependency targets and workspace exclusions
+├── Cargo.toml              # Build configurations and dependency definitions
+└── README.md               # User manual and project description
 ```
 
 ---
 
-## 🛠️ Technology Stack
+## 🚀 Getting Started
 
-* **Rust**: Memory-safe system language running edition 2024.
-* **Windows Media Foundation (WMF)**: Direct hardware-accelerated demuxing and decoding (NVDEC) using the DXGI Device Manager.
-* **Direct3D 11 Video Processing (VPP)**: Real-time, GPU-driven color space conversion (`NV12` ⇄ `BGRA`) and resolution downscaling.
-* **NVIDIA NVENC SDK**: Direct access to hardware encoding chips.
-* **Native MP4 Muxer**: Fast and low-overhead container writer wrapping encoded H.264 streams.
-
----
-
-## 🚀 Usage
+Launch commands via the CLI to check GPU capabilities, play, transcode, screenshot, or process subtitles, color, and audio:
 
 ### 1. Show GPU Info & Telemetry
 Queries NVIDIA system telemetry for driver versions, active core utilization, VRAM metrics, power draw, and temperature:
 ```bash
-nann info
+nanaccel info
 ```
 
 ### 2. GPU-Accelerated Playback
 Decodes and presents video directly into a Direct3D 11 window at native frame rates:
 ```bash
-nann play path/to/video.mp4
+nanaccel play path/to/video.mp4
 ```
 **Options:**
 * `--no-audio` : Disables audio rendering.
@@ -66,7 +58,7 @@ nann play path/to/video.mp4
 ### 3. Pure GPU Transcoding
 Transcodes H.264 or HEVC inputs directly on the GPU, with optional hardware scaling and custom bitrates:
 ```bash
-nann transcode input.mp4 output.mp4 -c h264 -p p4 -b 5M --scale 1280x720
+nanaccel transcode input.mp4 output.mp4 -c h264 -p p4 -b 5M --scale 1280x720
 ```
 **Options:**
 * `-c, --codec <codec>` : Target codec (`h264`, `hevc`). Default is H.264.
@@ -77,7 +69,7 @@ nann transcode input.mp4 output.mp4 -c h264 -p p4 -b 5M --scale 1280x720
 ### 4. GPU-Accelerated Screenshot (Frame Extraction)
 Decodes a specific frame on the GPU and saves it directly to a high-fidelity image file:
 ```bash
-nann screenshot input.mp4 output.png -t 5000
+nanaccel screenshot input.mp4 output.png -t 5000
 ```
 **Options:**
 * `-t, --time <ms>` : Timestamp in milliseconds (default: 0).
@@ -95,7 +87,7 @@ To build the executable, ensure you have the **Windows SDK** and **C++ Build Too
 cargo build --release
 ```
 
-The compiled binary will be located at `target/release/nann.exe`.
+The compiled binary will be located at `target/release/nanaccel.exe`.
 
 ---
 

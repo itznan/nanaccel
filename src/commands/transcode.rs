@@ -21,7 +21,7 @@ pub fn run(
             .to_lowercase();
         if ext != "mp4" && ext != "mov" && ext != "m4v" && ext != "3gp" && !ext.is_empty() {
             println!(
-                "\x1b[33mWarning: nann natively encodes and muxes to standard ISO-MP4/MOV formats. \
+                "\x1b[33mWarning: NanAccel natively encodes and muxes to standard ISO-MP4/MOV formats. \
                 The output stream will be written as a valid MP4/MOV container structure inside the requested '.{}' file.\x1b[0m",
                 ext
             );

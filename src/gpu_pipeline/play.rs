@@ -30,7 +30,7 @@ unsafe extern "system" fn window_proc(
 pub fn create_video_window(width: u32, height: u32) -> Result<HWND> {
     unsafe {
         let instance = windows::Win32::System::LibraryLoader::GetModuleHandleW(None)?;
-        let class_name: Vec<u16> = "NannVideoPlayerClass\0".encode_utf16().collect();
+        let class_name: Vec<u16> = "NanAccelVideoPlayerClass\0".encode_utf16().collect();
 
         let wnd_class = WNDCLASSW {
             lpfnWndProc: Some(window_proc),
@@ -42,7 +42,7 @@ pub fn create_video_window(width: u32, height: u32) -> Result<HWND> {
 
         windows::Win32::UI::WindowsAndMessaging::RegisterClassW(&wnd_class);
 
-        let window_title: Vec<u16> = "Nann Video Player - GPU Accelerated\0"
+        let window_title: Vec<u16> = "NanAccel Video Player - GPU Accelerated\0"
             .encode_utf16()
             .collect();
 

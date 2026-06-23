@@ -170,7 +170,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "nann"
+name = "nanaccel"
 version = "0.1.0"
 dependencies = [
  "bytes",

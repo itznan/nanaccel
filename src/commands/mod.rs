@@ -95,10 +95,10 @@ pub enum Commands {
 }
 
 pub fn print_help() {
-    println!("\x1b[1m\x1b[36mNVIDIA Hardware Accelerated Video CLI Tool (nann)\x1b[0m");
+    println!("\x1b[1m\x1b[36mNVIDIA Hardware Accelerated Video CLI Tool (NanAccel)\x1b[0m");
     println!("Written in Rust with zero compile-time dependencies to avoid application controls.");
     println!("\n\x1b[1mUsage:\x1b[0m");
-    println!("  nann <subcommand> [options]");
+    println!("  nanaccel <subcommand> [options]");
     println!("\n\x1b[1mSubcommands:\x1b[0m");
     println!(
         "  \x1b[32minfo\x1b[0m                              Print NVIDIA GPU capabilities & live status"
