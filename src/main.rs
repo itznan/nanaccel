@@ -21,6 +21,11 @@ enum Commands {
         scale: Option<String>,
         transcode_audio: bool,
     },
+    Screenshot {
+        input: String,
+        output: String,
+        time_ms: u32,
+    },
     Info,
 }
 
@@ -142,6 +147,10 @@ fn print_help() {
     println!("       [-b, --bitrate <bitrate>]    Output video bitrate (e.g., 5M, 800k)");
     println!("       [--scale <width>x<height>]   Scale resolution on the GPU (e.g., 1280x720)");
     println!("       [--transcode-audio]          Transcode audio to AAC (default: copy stream)");
+    println!(
+        "  \x1b[32mscreenshot <input> <output>\x1b[0m       Extract a single frame from the video at a timestamp"
+    );
+    println!("       [-t, --time <ms>]            Timestamp in milliseconds (default: 0)");
     println!();
 }
 
@@ -263,6 +272,38 @@ fn parse_args() -> Result<Commands, String> {
                 transcode_audio,
             })
         }
+        "screenshot" => {
+            if args.len() < 4 {
+                return Err("Usage: screenshot <input> <output> [options]".to_string());
+            }
+            let input = args[2].clone();
+            let output = args[3].clone();
+            let mut time_ms = 0;
+
+            let mut i = 4;
+            while i < args.len() {
+                match args[i].as_str() {
+                    "-t" | "--time" => {
+                        if i + 1 < args.len() {
+                            time_ms = args[i + 1].parse::<u32>().map_err(|_| {
+                                "Invalid value for --time: must be a positive integer".to_string()
+                            })?;
+                            i += 2;
+                        } else {
+                            return Err("Missing value for --time".to_string());
+                        }
+                    }
+                    other => {
+                        return Err(format!("Unknown option for screenshot: {}", other));
+                    }
+                }
+            }
+            Ok(Commands::Screenshot {
+                input,
+                output,
+                time_ms,
+            })
+        }
         sub => Err(format!("Unknown subcommand: {}", sub)),
     }
 }
@@ -356,6 +397,28 @@ fn main() {
                 }
                 Err(e) => {
                     println!("\x1b[1m\x1b[31mTranscoding failed: {}\x1b[0m", e);
+                }
+            }
+        }
+
+        Commands::Screenshot {
+            input,
+            output,
+            time_ms,
+        } => {
+            println!(
+                "Extracting GPU screenshot from {} to {} at time {} ms...",
+                input, output, time_ms
+            );
+            let screenshot_result = gpu_pipeline::screenshot_gpu(&input, &output, time_ms);
+            match screenshot_result {
+                Ok(_) => {
+                    println!(
+                        "\x1b[1m\x1b[32mScreenshot extracted and saved successfully via GPU/WIC!\x1b[0m"
+                    );
+                }
+                Err(e) => {
+                    println!("\x1b[1m\x1b[31mScreenshot failed: {}\x1b[0m", e);
                 }
             }
         }
