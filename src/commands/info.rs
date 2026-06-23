@@ -1,5 +1,5 @@
+use crate::gpu_utils::{query_dynamic_gpu_stats, query_static_gpu_info};
 use std::process::Command;
-use crate::gpu_utils::{query_static_gpu_info, query_dynamic_gpu_stats};
 
 pub fn run() {
     // Get Static GPU info

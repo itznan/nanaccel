@@ -19,7 +19,10 @@ pub fn run(
     position: Option<&str>,
     additional_inputs: &[String],
 ) {
-    println!("Starting video edit operation '{}' on {} ...", operation, input);
+    println!(
+        "Starting video edit operation '{}' on {} ...",
+        operation, input
+    );
     match run_video_edit_operation(
         input,
         output,
@@ -124,13 +127,10 @@ fn run_video_edit_operation(
             args.push(output.to_string());
 
             println!("Running join command: ffmpeg {}", args.join(" "));
-            let status = Command::new("ffmpeg")
-                .args(&args)
-                .status()
-                .map_err(|e| {
-                    let _ = std::fs::remove_file(&list_path);
-                    format!("Failed to execute concat: {}", e)
-                })?;
+            let status = Command::new("ffmpeg").args(&args).status().map_err(|e| {
+                let _ = std::fs::remove_file(&list_path);
+                format!("Failed to execute concat: {}", e)
+            })?;
 
             let _ = std::fs::remove_file(&list_path);
             if status.success() {
@@ -202,10 +202,13 @@ fn run_video_edit_operation(
             let status1 = Command::new("ffmpeg")
                 .args(&[
                     "-y",
-                    "-i", input,
-                    "-vf", "vidstabdetect=shakiness=10:accuracy=15:result=transforms.trf",
-                    "-f", "null",
-                    "-"
+                    "-i",
+                    input,
+                    "-vf",
+                    "vidstabdetect=shakiness=10:accuracy=15:result=transforms.trf",
+                    "-f",
+                    "null",
+                    "-",
                 ])
                 .status()
                 .map_err(|e| format!("Failed to execute stabilization pass 1: {}", e))?;
@@ -225,13 +228,10 @@ fn run_video_edit_operation(
             args.push("copy".to_string());
             args.push(output.to_string());
 
-            let status2 = Command::new("ffmpeg")
-                .args(&args)
-                .status()
-                .map_err(|e| {
-                    let _ = std::fs::remove_file("transforms.trf");
-                    format!("Failed to execute stabilization pass 2: {}", e)
-                })?;
+            let status2 = Command::new("ffmpeg").args(&args).status().map_err(|e| {
+                let _ = std::fs::remove_file("transforms.trf");
+                format!("Failed to execute stabilization pass 2: {}", e)
+            })?;
 
             let _ = std::fs::remove_file("transforms.trf");
             if status2.success() {
@@ -305,10 +305,10 @@ fn run_video_edit_operation(
             args.push("-y".to_string());
             args.push("-i".to_string());
             args.push(input.to_string());
-            
+
             let mut vfilters = vec![];
             let mut afilters = vec![];
-            
+
             if let Some(fi) = fade_in {
                 vfilters.push(format!("fade=in:{}", fi));
                 afilters.push(format!("afade=in:{}", fi));
@@ -317,7 +317,7 @@ fn run_video_edit_operation(
                 vfilters.push(format!("fade=out:{}", fo));
                 afilters.push(format!("afade=out:{}", fo));
             }
-            
+
             if !vfilters.is_empty() {
                 args.push("-vf".to_string());
                 args.push(vfilters.join(","));
@@ -340,7 +340,10 @@ fn run_video_edit_operation(
             args.push(output.to_string());
         }
         "overlay" => {
-            let f2 = overlay_file.ok_or_else(|| "For 'overlay' operation, please specify an overlay file with -f/--file option.".to_string())?;
+            let f2 = overlay_file.ok_or_else(|| {
+                "For 'overlay' operation, please specify an overlay file with -f/--file option."
+                    .to_string()
+            })?;
             args.push("-y".to_string());
             args.push("-i".to_string());
             args.push(input.to_string());
@@ -357,11 +360,16 @@ fn run_video_edit_operation(
             args.push("-y".to_string());
             args.push("-i".to_string());
             args.push(input.to_string());
-            
+
             if let Some(txt) = watermark_text {
                 args.push("-vf".to_string());
                 let pos = position.unwrap_or("w-tw-10:h-th-10");
-                args.push(format!("drawtext=text='{}':x={}:y={}:fontsize=24:fontcolor=white", txt, pos.split(':').next().unwrap_or("w-tw-10"), pos.split(':').nth(1).unwrap_or("h-th-10")));
+                args.push(format!(
+                    "drawtext=text='{}':x={}:y={}:fontsize=24:fontcolor=white",
+                    txt,
+                    pos.split(':').next().unwrap_or("w-tw-10"),
+                    pos.split(':').nth(1).unwrap_or("h-th-10")
+                ));
                 args.push("-c:a".to_string());
                 args.push("copy".to_string());
             } else if let Some(img) = overlay_file {

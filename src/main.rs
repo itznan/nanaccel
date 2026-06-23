@@ -8,7 +8,7 @@ fn main() {
         println!("gpu not detected");
         std::process::exit(1);
     }
-    
+
     let args = match commands::parse_args() {
         Ok(cmd) => cmd,
         Err(err) => {

@@ -17,7 +17,10 @@ pub fn run(
     silence_db: Option<&str>,
     silence_duration: Option<&str>,
 ) {
-    println!("Starting audio editing operation '{}' on {} ...", operation, input);
+    println!(
+        "Starting audio editing operation '{}' on {} ...",
+        operation, input
+    );
     match run_audio_operation(
         input,
         output,
@@ -36,7 +39,10 @@ pub fn run(
         silence_duration,
     ) {
         Ok(_) => println!("\x1b[1m\x1b[32mAudio editing operation completed successfully!\x1b[0m"),
-        Err(e) => eprintln!("\x1b[1m\x1b[31mAudio editing operation failed: {}\x1b[0m", e),
+        Err(e) => eprintln!(
+            "\x1b[1m\x1b[31mAudio editing operation failed: {}\x1b[0m",
+            e
+        ),
     }
 }
 
@@ -96,9 +102,7 @@ fn run_audio_operation(
             // Richer room simulation using a multi-tap delay line
             "aecho=0.8:0.9:30|45|60|80:0.4|0.3|0.2|0.1".to_string()
         }
-        "echo" => {
-            "aecho=0.8:0.9:1000:0.3".to_string()
-        }
+        "echo" => "aecho=0.8:0.9:1000:0.3".to_string(),
         "bass" => {
             let g = gain.unwrap_or("8");
             format!("equalizer=f=100:width_type=h:width=100:g={}", g)

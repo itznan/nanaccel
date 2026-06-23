@@ -16,7 +16,10 @@ pub fn run(
     saturation: Option<f32>,
     tonemap: Option<&str>,
 ) {
-    println!("Starting color processing operation '{}' on {} ...", operation, input);
+    println!(
+        "Starting color processing operation '{}' on {} ...",
+        operation, input
+    );
     match run_color_operation(
         input,
         output,
@@ -33,8 +36,13 @@ pub fn run(
         saturation,
         tonemap,
     ) {
-        Ok(_) => println!("\x1b[1m\x1b[32mColor processing operation completed successfully!\x1b[0m"),
-        Err(e) => eprintln!("\x1b[1m\x1b[31mColor processing operation failed: {}\x1b[0m", e),
+        Ok(_) => {
+            println!("\x1b[1m\x1b[32mColor processing operation completed successfully!\x1b[0m")
+        }
+        Err(e) => eprintln!(
+            "\x1b[1m\x1b[31mColor processing operation failed: {}\x1b[0m",
+            e
+        ),
     }
 }
 
@@ -61,11 +69,11 @@ fn run_color_operation(
             args.push("-y".to_string());
             args.push("-i".to_string());
             args.push(input.to_string());
-            
+
             let tm = tonemap.unwrap_or("mobius");
             args.push("-vf".to_string());
             args.push(format!("zscale=t=linear:npl=100,format=gbrpf32le,tonemap=tonemap={}:desat=2,zscale=p=bt709:t=bt709:m=bt709,format=yuv420p", tm));
-            
+
             args.push("-c:a".to_string());
             args.push("copy".to_string());
             args.push(output.to_string());
@@ -74,24 +82,26 @@ fn run_color_operation(
             args.push("-y".to_string());
             args.push("-i".to_string());
             args.push(input.to_string());
-            
+
             args.push("-vf".to_string());
             args.push("zscale=p=bt2020:t=arib-std-b67:m=bt2020nc,format=yuv420p10le".to_string());
-            
+
             args.push("-c:a".to_string());
             args.push("copy".to_string());
             args.push(output.to_string());
         }
         "lut" => {
-            let lf = lut_file.ok_or_else(|| "For 'lut' operation, please specify a LUT file with -l/--lut option.".to_string())?;
+            let lf = lut_file.ok_or_else(|| {
+                "For 'lut' operation, please specify a LUT file with -l/--lut option.".to_string()
+            })?;
             args.push("-y".to_string());
             args.push("-i".to_string());
             args.push(input.to_string());
-            
+
             let escaped_lut_path = lf.replace("\\", "/").replace(":", "\\:");
             args.push("-vf".to_string());
             args.push(format!("lut3d=file='{}'", escaped_lut_path));
-            
+
             args.push("-c:a".to_string());
             args.push("copy".to_string());
             args.push(output.to_string());
@@ -111,7 +121,7 @@ fn run_color_operation(
             args.push("-y".to_string());
             args.push("-i".to_string());
             args.push(input.to_string());
-            
+
             let mut balance = vec![];
             if let Some(s) = shadows {
                 let parts: Vec<&str> = s.split(':').collect();
@@ -131,14 +141,14 @@ fn run_color_operation(
                     balance.push(format!("rh={}:gh={}:bh={}", parts[0], parts[1], parts[2]));
                 }
             }
-            
+
             args.push("-vf".to_string());
             if balance.is_empty() {
                 args.push("copy".to_string());
             } else {
                 args.push(format!("colorbalance={}", balance.join(":")));
             }
-            
+
             args.push("-c:a".to_string());
             args.push("copy".to_string());
             args.push(output.to_string());
@@ -173,7 +183,10 @@ fn run_color_operation(
             args.push("-i".to_string());
             args.push(input.to_string());
             args.push("-vf".to_string());
-            args.push(format!("eq=brightness={}:contrast={}:saturation={}", b, c, s));
+            args.push(format!(
+                "eq=brightness={}:contrast={}:saturation={}",
+                b, c, s
+            ));
             args.push("-c:a".to_string());
             args.push("copy".to_string());
             args.push(output.to_string());

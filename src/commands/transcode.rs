@@ -26,14 +26,8 @@ pub fn run(
             );
         }
         println!("Starting GPU transcode: {} -> {} ...", input, output);
-        let transcode_result = crate::gpu_pipeline::transcode_gpu(
-            input,
-            output,
-            codec,
-            preset,
-            bitrate,
-            scale,
-        );
+        let transcode_result =
+            crate::gpu_pipeline::transcode_gpu(input, output, codec, preset, bitrate, scale);
 
         match transcode_result {
             Ok(_) => {
@@ -44,16 +38,38 @@ pub fn run(
                     "\x1b[33mWarning: Native GPU transcode failed ({}). Falling back to FFmpeg transcode...\x1b[0m",
                     e
                 );
-                if let Err(fe) = run_ffmpeg_transcode(input, output, codec, preset, bitrate, scale, transcode_audio, audio_codec) {
+                if let Err(fe) = run_ffmpeg_transcode(
+                    input,
+                    output,
+                    codec,
+                    preset,
+                    bitrate,
+                    scale,
+                    transcode_audio,
+                    audio_codec,
+                ) {
                     println!("\x1b[1m\x1b[31mTranscoding failed: {}\x1b[0m", fe);
                 } else {
-                    println!("\x1b[1m\x1b[32mTranscoding completed successfully via FFmpeg!\x1b[0m");
+                    println!(
+                        "\x1b[1m\x1b[32mTranscoding completed successfully via FFmpeg!\x1b[0m"
+                    );
                 }
             }
         }
     } else {
-        println!("Non-native format or audio transcode requested. Delegating transcode to FFmpeg...");
-        if let Err(fe) = run_ffmpeg_transcode(input, output, codec, preset, bitrate, scale, transcode_audio, audio_codec) {
+        println!(
+            "Non-native format or audio transcode requested. Delegating transcode to FFmpeg..."
+        );
+        if let Err(fe) = run_ffmpeg_transcode(
+            input,
+            output,
+            codec,
+            preset,
+            bitrate,
+            scale,
+            transcode_audio,
+            audio_codec,
+        ) {
             println!("\x1b[1m\x1b[31mTranscoding failed: {}\x1b[0m", fe);
         } else {
             println!("\x1b[1m\x1b[32mTranscoding completed successfully via FFmpeg!\x1b[0m");
@@ -181,8 +197,11 @@ fn run_ffmpeg_transcode(
         };
 
         if let Some(sw_codec) = fallback_codec {
-            println!("\x1b[33mWarning: GPU-accelerated encoder '{}' failed or is unsupported. Falling back to software encoder '{}'...\x1b[0m", vcodec, sw_codec);
-            
+            println!(
+                "\x1b[33mWarning: GPU-accelerated encoder '{}' failed or is unsupported. Falling back to software encoder '{}'...\x1b[0m",
+                vcodec, sw_codec
+            );
+
             let mut sw_args = vec!["-y".to_string(), "-i".to_string(), input.to_string()];
             sw_args.push("-c:v".to_string());
             sw_args.push(sw_codec.to_string());

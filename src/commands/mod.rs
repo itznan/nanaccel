@@ -1,11 +1,11 @@
+pub mod audio;
+pub mod color;
+pub mod edit;
+pub mod info;
 pub mod play;
-pub mod transcode;
 pub mod screenshot;
 pub mod subtitle;
-pub mod edit;
-pub mod color;
-pub mod info;
-pub mod audio;
+pub mod transcode;
 
 #[derive(Debug)]
 #[allow(dead_code)]
@@ -112,8 +112,12 @@ pub fn print_help() {
     println!(
         "  \x1b[32mtranscode <input> <output>\x1b[0m        Transcode video using NVDEC -> CUDA -> NVENC"
     );
-    println!("       [-c, --codec <codec>]        Target video codec: h264, hevc, av1, vp8, vp9, mpeg1, mpeg2, mpeg4, mjpeg, prores, dnxhd, cineform, huffyuv, ffv1, theora, dirac, vc1, wmv, xvid, divx (default: h264)");
-    println!("       [-ac, --audio-codec <codec>] Target audio codec: aac, mp3, flac, opus, vorbis, pcm, alac, ac3, e-ac3, dts, amr, speex, wma, gsm, truehd, atmos, dts-hd");
+    println!(
+        "       [-c, --codec <codec>]        Target video codec: h264, hevc, av1, vp8, vp9, mpeg1, mpeg2, mpeg4, mjpeg, prores, dnxhd, cineform, huffyuv, ffv1, theora, dirac, vc1, wmv, xvid, divx (default: h264)"
+    );
+    println!(
+        "       [-ac, --audio-codec <codec>] Target audio codec: aac, mp3, flac, opus, vorbis, pcm, alac, ac3, e-ac3, dts, amr, speex, wma, gsm, truehd, atmos, dts-hd"
+    );
     println!(
         "       [-p, --preset <preset>]      NVENC preset: p1 (fastest) to p7 (slowest) (default: p4)"
     );
@@ -124,19 +128,27 @@ pub fn print_help() {
         "  \x1b[32mscreenshot <input> <output>\x1b[0m       Extract a single frame from the video at a timestamp"
     );
     println!("       [-t, --time <ms>]            Timestamp in milliseconds (default: 0)");
-    println!(
-        "  \x1b[32msubtitle <operation> <input> <output>\x1b[0m Subtitle processing utility"
-    );
+    println!("  \x1b[32msubtitle <operation> <input> <output>\x1b[0m Subtitle processing utility");
     println!("       Operations:                  extract, convert, burn, sync, merge, remove");
-    println!("       Format Support:              SRT, ASS, SSA, VTT, PGS, DVB, DVD subtitles, Teletext");
-    println!("       [-s, --sub-file <file>]      Specify subtitle file for burn / merge operations");
-    println!("       [-t, --track <idx>]          Specify track index for subtitle extraction (default: 0)");
-    println!("       [--shift <ms>]               Specify timestamp shift in milliseconds for sync operation");
     println!(
-        "  \x1b[32medit <operation> <input> <output>\x1b[0m  Video editing utility"
+        "       Format Support:              SRT, ASS, SSA, VTT, PGS, DVB, DVD subtitles, Teletext"
     );
-    println!("       Operations:                  trim, cut, split, join, concat, crop, rotate, flip, scale,");
-    println!("                                    stabilize, denoise, sharpen, deblock, deinterlace, reverse,");
+    println!(
+        "       [-s, --sub-file <file>]      Specify subtitle file for burn / merge operations"
+    );
+    println!(
+        "       [-t, --track <idx>]          Specify track index for subtitle extraction (default: 0)"
+    );
+    println!(
+        "       [--shift <ms>]               Specify timestamp shift in milliseconds for sync operation"
+    );
+    println!("  \x1b[32medit <operation> <input> <output>\x1b[0m  Video editing utility");
+    println!(
+        "       Operations:                  trim, cut, split, join, concat, crop, rotate, flip, scale,"
+    );
+    println!(
+        "                                    stabilize, denoise, sharpen, deblock, deinterlace, reverse,"
+    );
     println!("                                    loop, fade, crossfade, overlay, watermark");
     println!("       [-ss, --start <time>]        Specify start time for trim / cut / fade");
     println!("       [-to, --end <time>]          Specify end time for trim / cut");
@@ -147,37 +159,55 @@ pub fn print_help() {
     println!("       [--scale <w>x<h>]            Target output resolution");
     println!("       [--loop-count <N>]           Specify number of loops");
     println!("       [--fade-in / --fade-out]     Specify fade options (e.g. st=0:d=2)");
-    println!("       [-f, --file / --overlay]     Specify secondary overlay / crossfade video file");
+    println!(
+        "       [-f, --file / --overlay]     Specify secondary overlay / crossfade video file"
+    );
     println!("       [--watermark-text <text>]    Specify drawtext watermark text");
     println!("       [--position <x:y>]           Overlay/drawtext positioning");
+    println!("  \x1b[32mcolor <operation> <input> <output>\x1b[0m Color processing utility");
     println!(
-        "  \x1b[32mcolor <operation> <input> <output>\x1b[0m Color processing utility"
+        "       Operations:                  hdr2sdr, sdr2hdr, lut, gamma, grading, colorspace,"
     );
-    println!("       Operations:                  hdr2sdr, sdr2hdr, lut, gamma, grading, colorspace,");
     println!("                                    whitebalance, adjust, tonemap");
     println!("       [-l, --lut <file>]           Specify LUT file for lut operation");
     println!("       [--gamma <val>]              Specify gamma value (default: 1.0)");
-    println!("       [--shadows / --midtones / --highlights <r:g:b>] Lift/Gamma/Gain color balance controls");
-    println!("       [--colorspace <space>]       Specify colorspace conversion (e.g. bt709, bt2020)");
-    println!("       [--temp <K>]                 Specify color temperature in Kelvin for white balance");
+    println!(
+        "       [--shadows / --midtones / --highlights <r:g:b>] Lift/Gamma/Gain color balance controls"
+    );
+    println!(
+        "       [--colorspace <space>]       Specify colorspace conversion (e.g. bt709, bt2020)"
+    );
+    println!(
+        "       [--temp <K>]                 Specify color temperature in Kelvin for white balance"
+    );
     println!("       [--brightness / --contrast / --saturation <val>] Adjust controls");
     println!("       [--tonemap <algo>]           Tone mapping algorithm");
+    println!("  \x1b[32maudio <operation> <input> <output>\x1b[0m Audio editing utility");
     println!(
-        "  \x1b[32maudio <operation> <input> <output>\x1b[0m Audio editing utility"
+        "       Operations:                  volume / volume-control, denoise / noise-reduction,"
     );
-    println!("       Operations:                  volume / volume-control, denoise / noise-reduction,");
-    println!("                                    compress / compression, limit / limiter, eq / equalizer,");
-    println!("                                    pitch / pitch-shift, tempo / tempo-change, reverb, echo,");
-    println!("                                    bass / bass-boost, silencedetect / silence-detection,");
+    println!(
+        "                                    compress / compression, limit / limiter, eq / equalizer,"
+    );
+    println!(
+        "                                    pitch / pitch-shift, tempo / tempo-change, reverb, echo,"
+    );
+    println!(
+        "                                    bass / bass-boost, silencedetect / silence-detection,"
+    );
     println!("                                    normalize / audio-normalization");
     println!("       [--volume <val>]             Volume scale multiplier or dB (default: 1.0)");
     println!("       [--nr <val>]                 Noise reduction level (default: 12)");
     println!("       [--threshold / --ratio <val>] Compression parameters (default: -21dB / 4)");
-    println!("       [--limit <val>]              Lookahead limiter input/output limit (default: 0.1)");
+    println!(
+        "       [--limit <val>]              Lookahead limiter input/output limit (default: 0.1)"
+    );
     println!("       [--freq / --gain <val>]      Parametric equalizer band options");
     println!("       [--pitch <val>]              Pitch shift scale (default: 1.0)");
     println!("       [--tempo <val>]              Tempo speed scale (default: 1.0)");
-    println!("       [--loudness <val>]           Target LUFS normalization loudness (default: -16)");
+    println!(
+        "       [--loudness <val>]           Target LUFS normalization loudness (default: -16)"
+    );
     println!("       [--silence-db / --silence-duration <val>] Silence detection parameters");
     println!();
 }
@@ -265,9 +295,14 @@ pub fn parse_args() -> Result<Commands, String> {
                                 codec = "hevc".to_string();
                             } else if target_codec == "av1" {
                                 codec = "av1".to_string();
-                            } else if ["vp8", "vp9", "mpeg1", "mpeg-1", "mpeg2", "mpeg-2", "mpeg4", "mpeg-4",
-                                       "mjpeg", "prores", "dnxhd", "cineform", "cfhd", "huffyuv", "ffv1",
-                                       "theora", "dirac", "vc-1", "vc1", "wmv", "xvid", "divx"].contains(&target_codec.as_str()) {
+                            } else if [
+                                "vp8", "vp9", "mpeg1", "mpeg-1", "mpeg2", "mpeg-2", "mpeg4",
+                                "mpeg-4", "mjpeg", "prores", "dnxhd", "cineform", "cfhd",
+                                "huffyuv", "ffv1", "theora", "dirac", "vc-1", "vc1", "wmv", "xvid",
+                                "divx",
+                            ]
+                            .contains(&target_codec.as_str())
+                            {
                                 codec = target_codec;
                             } else {
                                 return Err(format!("Unsupported video codec: '{}'.", args[i + 1]));
@@ -280,8 +315,29 @@ pub fn parse_args() -> Result<Commands, String> {
                     "-ac" | "--audio-codec" => {
                         if i + 1 < args.len() {
                             let target_audio = args[i + 1].to_lowercase();
-                            if ["aac", "mp3", "flac", "opus", "vorbis", "pcm", "alac", "ac3", "e-ac3", "eac3",
-                                "dts", "amr", "speex", "wma", "gsm", "truehd", "dolby atmos", "atmos", "dts-hd"].contains(&target_audio.as_str()) {
+                            if [
+                                "aac",
+                                "mp3",
+                                "flac",
+                                "opus",
+                                "vorbis",
+                                "pcm",
+                                "alac",
+                                "ac3",
+                                "e-ac3",
+                                "eac3",
+                                "dts",
+                                "amr",
+                                "speex",
+                                "wma",
+                                "gsm",
+                                "truehd",
+                                "dolby atmos",
+                                "atmos",
+                                "dts-hd",
+                            ]
+                            .contains(&target_audio.as_str())
+                            {
                                 audio_codec = Some(target_audio);
                                 transcode_audio = true;
                             } else {
@@ -371,7 +427,8 @@ pub fn parse_args() -> Result<Commands, String> {
         "subtitle" | "sub" => {
             if args.len() < 5 {
                 return Err("Usage: subtitle <operation> <input> <output> [options]\n\
-                            Operations: extract, convert, burn, sync, merge, remove".to_string());
+                            Operations: extract, convert, burn, sync, merge, remove"
+                    .to_string());
             }
             let operation = args[2].to_lowercase();
             let input = args[3].clone();
@@ -394,7 +451,11 @@ pub fn parse_args() -> Result<Commands, String> {
                     }
                     "-t" | "--track" => {
                         if i + 1 < args.len() {
-                            track_index = Some(args[i + 1].parse::<u32>().map_err(|_| "Invalid track index")?);
+                            track_index = Some(
+                                args[i + 1]
+                                    .parse::<u32>()
+                                    .map_err(|_| "Invalid track index")?,
+                            );
                             i += 2;
                         } else {
                             return Err("Missing value for --track".to_string());
@@ -402,7 +463,11 @@ pub fn parse_args() -> Result<Commands, String> {
                     }
                     "--shift" => {
                         if i + 1 < args.len() {
-                            shift_ms = Some(args[i + 1].parse::<i32>().map_err(|_| "Invalid shift milliseconds value")?);
+                            shift_ms = Some(
+                                args[i + 1]
+                                    .parse::<i32>()
+                                    .map_err(|_| "Invalid shift milliseconds value")?,
+                            );
                             i += 2;
                         } else {
                             return Err("Missing value for --shift".to_string());
@@ -414,8 +479,13 @@ pub fn parse_args() -> Result<Commands, String> {
                 }
             }
 
-            if !["extract", "convert", "burn", "sync", "merge", "remove"].contains(&operation.as_str()) {
-                return Err(format!("Unknown subtitle operation: '{}'. Available: extract, convert, burn, sync, merge, remove", operation));
+            if !["extract", "convert", "burn", "sync", "merge", "remove"]
+                .contains(&operation.as_str())
+            {
+                return Err(format!(
+                    "Unknown subtitle operation: '{}'. Available: extract, convert, burn, sync, merge, remove",
+                    operation
+                ));
             }
 
             Ok(Commands::Subtitle {
@@ -512,7 +582,11 @@ pub fn parse_args() -> Result<Commands, String> {
                     }
                     "--loop-count" => {
                         if i + 1 < args.len() {
-                            loop_count = Some(args[i + 1].parse::<i32>().map_err(|_| "Invalid loop count")?);
+                            loop_count = Some(
+                                args[i + 1]
+                                    .parse::<i32>()
+                                    .map_err(|_| "Invalid loop count")?,
+                            );
                             i += 2;
                         } else {
                             return Err("Missing value for --loop-count".to_string());
@@ -566,12 +640,33 @@ pub fn parse_args() -> Result<Commands, String> {
             }
 
             let valid_ops = [
-                "trim", "cut", "split", "join", "concat", "crop", "rotate", "flip",
-                "scale", "stabilize", "denoise", "sharpen", "deblock", "deinterlace",
-                "reverse", "loop", "fade", "crossfade", "overlay", "watermark"
+                "trim",
+                "cut",
+                "split",
+                "join",
+                "concat",
+                "crop",
+                "rotate",
+                "flip",
+                "scale",
+                "stabilize",
+                "denoise",
+                "sharpen",
+                "deblock",
+                "deinterlace",
+                "reverse",
+                "loop",
+                "fade",
+                "crossfade",
+                "overlay",
+                "watermark",
             ];
             if !valid_ops.contains(&operation.as_str()) {
-                return Err(format!("Unknown edit operation: '{}'. Available: {}", operation, valid_ops.join(", ")));
+                return Err(format!(
+                    "Unknown edit operation: '{}'. Available: {}",
+                    operation,
+                    valid_ops.join(", ")
+                ));
             }
 
             Ok(Commands::Edit {
@@ -668,7 +763,11 @@ pub fn parse_args() -> Result<Commands, String> {
                     }
                     "--temp" | "--temperature" => {
                         if i + 1 < args.len() {
-                            temperature = Some(args[i + 1].parse::<f32>().map_err(|_| "Invalid temperature value")?);
+                            temperature = Some(
+                                args[i + 1]
+                                    .parse::<f32>()
+                                    .map_err(|_| "Invalid temperature value")?,
+                            );
                             i += 2;
                         } else {
                             return Err("Missing value for --temp".to_string());
@@ -676,7 +775,11 @@ pub fn parse_args() -> Result<Commands, String> {
                     }
                     "--brightness" => {
                         if i + 1 < args.len() {
-                            brightness = Some(args[i + 1].parse::<f32>().map_err(|_| "Invalid brightness value")?);
+                            brightness = Some(
+                                args[i + 1]
+                                    .parse::<f32>()
+                                    .map_err(|_| "Invalid brightness value")?,
+                            );
                             i += 2;
                         } else {
                             return Err("Missing value for --brightness".to_string());
@@ -684,7 +787,11 @@ pub fn parse_args() -> Result<Commands, String> {
                     }
                     "--contrast" => {
                         if i + 1 < args.len() {
-                            contrast = Some(args[i + 1].parse::<f32>().map_err(|_| "Invalid contrast value")?);
+                            contrast = Some(
+                                args[i + 1]
+                                    .parse::<f32>()
+                                    .map_err(|_| "Invalid contrast value")?,
+                            );
                             i += 2;
                         } else {
                             return Err("Missing value for --contrast".to_string());
@@ -692,7 +799,11 @@ pub fn parse_args() -> Result<Commands, String> {
                     }
                     "--saturation" => {
                         if i + 1 < args.len() {
-                            saturation = Some(args[i + 1].parse::<f32>().map_err(|_| "Invalid saturation value")?);
+                            saturation = Some(
+                                args[i + 1]
+                                    .parse::<f32>()
+                                    .map_err(|_| "Invalid saturation value")?,
+                            );
                             i += 2;
                         } else {
                             return Err("Missing value for --saturation".to_string());
@@ -712,9 +823,23 @@ pub fn parse_args() -> Result<Commands, String> {
                 }
             }
 
-            let valid_ops = ["hdr2sdr", "sdr2hdr", "lut", "gamma", "grading", "colorspace", "whitebalance", "adjust", "tonemap"];
+            let valid_ops = [
+                "hdr2sdr",
+                "sdr2hdr",
+                "lut",
+                "gamma",
+                "grading",
+                "colorspace",
+                "whitebalance",
+                "adjust",
+                "tonemap",
+            ];
             if !valid_ops.contains(&operation.as_str()) {
-                return Err(format!("Unknown color operation: '{}'. Available: {}", operation, valid_ops.join(", ")));
+                return Err(format!(
+                    "Unknown color operation: '{}'. Available: {}",
+                    operation,
+                    valid_ops.join(", ")
+                ));
             }
 
             Ok(Commands::Color {
@@ -741,18 +866,27 @@ pub fn parse_args() -> Result<Commands, String> {
             }
             let raw_operation = args[2].to_lowercase();
             let operation = match raw_operation.as_str() {
-                "volume" | "volume-control" | "volume_control" | "volumecontrol" => "volume".to_string(),
-                "denoise" | "noise-reduction" | "noise_reduction" | "noisereduction" => "denoise".to_string(),
+                "volume" | "volume-control" | "volume_control" | "volumecontrol" => {
+                    "volume".to_string()
+                }
+                "denoise" | "noise-reduction" | "noise_reduction" | "noisereduction" => {
+                    "denoise".to_string()
+                }
                 "compress" | "compression" => "compress".to_string(),
                 "limit" | "limiter" => "limit".to_string(),
                 "eq" | "equalizer" => "eq".to_string(),
-                "pitch" | "pitch-shift" | "pitch_shift" | "pitch-shifting" | "pitch_shifting" => "pitch".to_string(),
+                "pitch" | "pitch-shift" | "pitch_shift" | "pitch-shifting" | "pitch_shifting" => {
+                    "pitch".to_string()
+                }
                 "tempo" | "tempo-change" | "tempo_change" => "tempo".to_string(),
                 "reverb" => "reverb".to_string(),
                 "echo" => "echo".to_string(),
                 "bass" | "bass-boost" | "bass_boost" | "bassboost" => "bass".to_string(),
-                "silencedetect" | "silence-detection" | "silence_detection" | "silence-detect" | "silencedetection" => "silencedetect".to_string(),
-                "normalize" | "audio-normalization" | "audio_normalization" | "normalization" => "normalize".to_string(),
+                "silencedetect" | "silence-detection" | "silence_detection" | "silence-detect"
+                | "silencedetection" => "silencedetect".to_string(),
+                "normalize" | "audio-normalization" | "audio_normalization" | "normalization" => {
+                    "normalize".to_string()
+                }
                 other => other.to_string(),
             };
             let input = args[3].clone();
@@ -832,7 +966,11 @@ pub fn parse_args() -> Result<Commands, String> {
                     }
                     "--pitch" => {
                         if i + 1 < args.len() {
-                            pitch = Some(args[i + 1].parse::<f32>().map_err(|_| "Invalid pitch value")?);
+                            pitch = Some(
+                                args[i + 1]
+                                    .parse::<f32>()
+                                    .map_err(|_| "Invalid pitch value")?,
+                            );
                             i += 2;
                         } else {
                             return Err("Missing value for --pitch".to_string());
@@ -840,7 +978,11 @@ pub fn parse_args() -> Result<Commands, String> {
                     }
                     "--tempo" => {
                         if i + 1 < args.len() {
-                            tempo = Some(args[i + 1].parse::<f32>().map_err(|_| "Invalid tempo value")?);
+                            tempo = Some(
+                                args[i + 1]
+                                    .parse::<f32>()
+                                    .map_err(|_| "Invalid tempo value")?,
+                            );
                             i += 2;
                         } else {
                             return Err("Missing value for --tempo".to_string());
@@ -876,9 +1018,26 @@ pub fn parse_args() -> Result<Commands, String> {
                 }
             }
 
-            let valid_ops = ["volume", "denoise", "compress", "limit", "eq", "pitch", "tempo", "reverb", "echo", "bass", "silencedetect", "normalize"];
+            let valid_ops = [
+                "volume",
+                "denoise",
+                "compress",
+                "limit",
+                "eq",
+                "pitch",
+                "tempo",
+                "reverb",
+                "echo",
+                "bass",
+                "silencedetect",
+                "normalize",
+            ];
             if !valid_ops.contains(&operation.as_str()) {
-                return Err(format!("Unknown audio operation: '{}'. Available: {}", operation, valid_ops.join(", ")));
+                return Err(format!(
+                    "Unknown audio operation: '{}'. Available: {}",
+                    operation,
+                    valid_ops.join(", ")
+                ));
             }
 
             Ok(Commands::Audio {

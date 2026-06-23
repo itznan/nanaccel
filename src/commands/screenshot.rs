@@ -31,12 +31,16 @@ pub fn run(input: &str, output: &str, time_ms: u32) {
 fn run_ffmpeg_screenshot(input: &str, output: &str, time_ms: u32) -> Result<(), String> {
     let seconds = time_ms as f64 / 1000.0;
     let args = &[
-        "-ss", &seconds.to_string(),
-        "-i", input,
-        "-vframes", "1",
-        "-q:v", "2",
+        "-ss",
+        &seconds.to_string(),
+        "-i",
+        input,
+        "-vframes",
+        "1",
+        "-q:v",
+        "2",
         output,
-        "-y"
+        "-y",
     ];
     println!("Running ffmpeg screenshot: ffmpeg {}", args.join(" "));
     let status = Command::new("ffmpeg")
