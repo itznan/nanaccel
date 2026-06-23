@@ -5,6 +5,7 @@ pub struct Muxer {
     writer: Mp4Writer<File>,
     track_id: u32,
     current_time: u64,
+    is_hevc: bool,
 }
 
 impl Muxer {
@@ -14,37 +15,52 @@ impl Muxer {
         height: u16,
         sps: &[u8],
         pps: &[u8],
+        is_hevc: bool,
     ) -> Result<Self, String> {
         let file =
             File::create(path).map_err(|e| format!("Failed to create output file: {}", e))?;
 
+        let mut compatible_brands = vec![
+            str::parse("isom").map_err(|_| "Invalid brand")?,
+            str::parse("iso2").map_err(|_| "Invalid brand")?,
+            str::parse("mp41").map_err(|_| "Invalid brand")?,
+        ];
+        if is_hevc {
+            compatible_brands.push(str::parse("hvc1").map_err(|_| "Invalid brand")?);
+        } else {
+            compatible_brands.push(str::parse("avc1").map_err(|_| "Invalid brand")?);
+        }
+
         let config = Mp4Config {
-            major_brand: str::parse("isom").map_err(|_| "Invalid major brand")?,
+            major_brand: if is_hevc {
+                str::parse("hvc1").map_err(|_| "Invalid major brand")?
+            } else {
+                str::parse("isom").map_err(|_| "Invalid major brand")?
+            },
             minor_version: 512,
-            compatible_brands: vec![
-                str::parse("isom").map_err(|_| "Invalid brand")?,
-                str::parse("iso2").map_err(|_| "Invalid brand")?,
-                str::parse("avc1").map_err(|_| "Invalid brand")?,
-                str::parse("mp41").map_err(|_| "Invalid brand")?,
-            ],
+            compatible_brands,
             timescale: 1000,
         };
 
         let mut writer = Mp4Writer::write_start(file, &config)
             .map_err(|e| format!("Failed to start MP4 writer: {}", e))?;
 
-        let avc = AvcConfig {
-            width,
-            height,
-            seq_param_set: sps.to_vec(),
-            pic_param_set: pps.to_vec(),
+        let media_conf = if is_hevc {
+            MediaConfig::HevcConfig(mp4::HevcConfig { width, height })
+        } else {
+            MediaConfig::AvcConfig(AvcConfig {
+                width,
+                height,
+                seq_param_set: sps.to_vec(),
+                pic_param_set: pps.to_vec(),
+            })
         };
 
         let track_config = TrackConfig {
             language: "und".to_string(),
             timescale: 1000, // 1000 ticks per second (1ms resolution)
             track_type: mp4::TrackType::Video,
-            media_conf: MediaConfig::AvcConfig(avc),
+            media_conf,
         };
 
         writer
@@ -58,6 +74,7 @@ impl Muxer {
             writer,
             track_id,
             current_time: 0,
+            is_hevc,
         })
     }
 
@@ -67,7 +84,7 @@ impl Muxer {
         duration_ms: u32,
         is_sync: bool,
     ) -> Result<(), String> {
-        let avcc_data = annex_b_to_avcc(annex_b);
+        let avcc_data = annex_b_to_avcc(annex_b, self.is_hevc);
         if avcc_data.is_empty() {
             return Ok(());
         }
@@ -96,9 +113,9 @@ impl Muxer {
     }
 }
 
-/// Converts Annex B H.264 stream format (start-code prefixed) to AVCC length-prefixed format.
-/// Skips SPS (7) and PPS (8) NAL units since they are stored in the container track header.
-pub fn annex_b_to_avcc(annex_b: &[u8]) -> Vec<u8> {
+/// Converts Annex B H.264 or HEVC stream format (start-code prefixed) to AVCC length-prefixed format.
+/// Skips parameter sets (SPS, PPS, VPS) since they are stored in the stream metadata.
+pub fn annex_b_to_avcc(annex_b: &[u8], is_hevc: bool) -> Vec<u8> {
     let mut avcc = Vec::new();
     let mut i = 0;
 
@@ -131,10 +148,18 @@ pub fn annex_b_to_avcc(annex_b: &[u8]) -> Vec<u8> {
             continue;
         }
 
-        // Filter out SPS (7) and PPS (8)
-        let nal_type = nal_payload[0] & 0x1F;
-        if nal_type == 7 || nal_type == 8 {
-            continue;
+        if is_hevc {
+            // HEVC NAL type is 6 bits: (nal_payload[0] >> 1) & 0x3F
+            let nal_type = (nal_payload[0] >> 1) & 0x3F;
+            if nal_type == 32 || nal_type == 33 || nal_type == 34 {
+                continue;
+            }
+        } else {
+            // H.264 NAL type is 5 bits: nal_payload[0] & 0x1F
+            let nal_type = nal_payload[0] & 0x1F;
+            if nal_type == 7 || nal_type == 8 {
+                continue;
+            }
         }
 
         let len = nal_payload.len() as u32;

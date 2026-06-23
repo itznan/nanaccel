@@ -794,21 +794,60 @@ pub fn transcode_gpu(
                         if !encoded_bytes.is_empty() {
                             // On first encoded frame, initialize the Muxer using SPS and PPS
                             if muxer.is_none() {
-                                let (sps, pps) = extract_sps_pps(encoded_bytes);
+                                let is_hevc = codec.to_lowercase() == "hevc";
+                                let (sps, pps) = if is_hevc {
+                                    (Vec::new(), Vec::new())
+                                } else {
+                                    extract_sps_pps(encoded_bytes)
+                                };
                                 muxer = Some(crate::mux::Muxer::create(
                                     output_path,
                                     out_width as u16,
                                     out_height as u16,
                                     &sps,
                                     &pps,
+                                    is_hevc,
                                 )?);
                             }
 
                             if let Some(m) = &mut muxer {
                                 // Frame duration in milliseconds
                                 let frame_duration = (1000.0 / fps) as u32;
-                                let is_keyframe =
-                                    encoded_bytes.contains(&0x05) || encoded_bytes.contains(&0x07);
+                                let is_hevc = codec.to_lowercase() == "hevc";
+                                let is_keyframe = if is_hevc {
+                                    // HEVC keyframe check (NAL unit type 19 or 20)
+                                    let mut has_keyframe = false;
+                                    let mut idx_bytes = 0;
+                                    while idx_bytes < encoded_bytes.len() {
+                                        if idx_bytes + 3 < encoded_bytes.len()
+                                            && encoded_bytes[idx_bytes..idx_bytes + 4]
+                                                == [0, 0, 0, 1]
+                                        {
+                                            let nal_type =
+                                                (encoded_bytes[idx_bytes + 4] >> 1) & 0x3F;
+                                            if nal_type == 19 || nal_type == 20 {
+                                                has_keyframe = true;
+                                                break;
+                                            }
+                                            idx_bytes += 4;
+                                        } else if idx_bytes + 2 < encoded_bytes.len()
+                                            && encoded_bytes[idx_bytes..idx_bytes + 3] == [0, 0, 1]
+                                        {
+                                            let nal_type =
+                                                (encoded_bytes[idx_bytes + 3] >> 1) & 0x3F;
+                                            if nal_type == 19 || nal_type == 20 {
+                                                has_keyframe = true;
+                                                break;
+                                            }
+                                            idx_bytes += 3;
+                                        } else {
+                                            idx_bytes += 1;
+                                        }
+                                    }
+                                    has_keyframe
+                                } else {
+                                    encoded_bytes.contains(&0x05) || encoded_bytes.contains(&0x07)
+                                };
                                 m.write_video_frame(encoded_bytes, frame_duration, is_keyframe)?;
                             }
                         }
