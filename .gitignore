@@ -1,0 +1,45 @@
+# Core Rust / Cargo
+/target/
+
+# Cargo.lock is NOT ignored for binary projects to ensure reproducible builds.
+# If this was a pure library project, we would ignore it.
+# !Cargo.lock
+
+# Operating System files
+.DS_Store
+Thumbs.db
+desktop.ini
+$RECYCLE.BIN/
+ehthumbs.db
+
+# IDEs and Editors
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+*.swo
+.project
+.settings/
+.classpath
+
+# Logs, temporary files, and debug outputs
+*.log
+*.dmp
+*.tmp
+*.bak
+*.temp
+crash.dump
+
+# Local test artifacts and media (never commit large media files to Git)
+*.mp4
+*.mkv
+*.avi
+*.mov
+*.wmv
+*.flv
+*.webm
+*.yuv
+*.raw

@@ -1,0 +1,26 @@
+# Set default behavior to automatically normalize line endings to LF on commit
+* text=auto
+
+# Explicitly declare text files to always have LF line endings on checkout
+*.rs text eol=lf diff=rust
+*.toml text eol=lf
+*.md text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.json text eol=lf
+*.sh text eol=lf
+*.bat text eol=crlf
+
+# Denote binary files (prevent git from modifying line endings or generating diffs)
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.mp4 binary
+*.mkv binary
+*.avi binary
+*.exe binary
+*.dll binary
+*.pdb binary
+*.lib binary

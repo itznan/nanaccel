@@ -1,0 +1,8 @@
+# rustfmt configuration for a professional Rust project
+edition = "2024"
+newline_style = "Unix"
+max_width = 100
+use_small_heuristics = "Default"
+tab_spaces = 4
+merge_derives = true
+use_try_shorthand = true
