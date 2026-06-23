@@ -5,6 +5,7 @@ pub mod subtitle;
 pub mod edit;
 pub mod color;
 pub mod info;
+pub mod audio;
 
 #[derive(Debug)]
 #[allow(dead_code)]
@@ -72,6 +73,23 @@ pub enum Commands {
         contrast: Option<f32>,
         saturation: Option<f32>,
         tonemap: Option<String>,
+    },
+    Audio {
+        input: String,
+        output: String,
+        operation: String,
+        volume: Option<String>,
+        noise_reduction: Option<String>,
+        threshold: Option<String>,
+        ratio: Option<String>,
+        limit: Option<String>,
+        gain: Option<String>,
+        frequency: Option<String>,
+        pitch: Option<f32>,
+        tempo: Option<f32>,
+        loudness: Option<String>,
+        silence_db: Option<String>,
+        silence_duration: Option<String>,
     },
     Info,
 }
@@ -144,6 +162,20 @@ pub fn print_help() {
     println!("       [--temp <K>]                 Specify color temperature in Kelvin for white balance");
     println!("       [--brightness / --contrast / --saturation <val>] Adjust controls");
     println!("       [--tonemap <algo>]           Tone mapping algorithm");
+    println!(
+        "  \x1b[32maudio <operation> <input> <output>\x1b[0m Audio editing utility"
+    );
+    println!("       Operations:                  volume, denoise, compress, limit, eq, pitch, tempo,");
+    println!("                                    reverb, echo, bass, silencedetect, normalize");
+    println!("       [--volume <val>]             Volume scale multiplier or dB (default: 1.0)");
+    println!("       [--nr <val>]                 Noise reduction level (default: 12)");
+    println!("       [--threshold / --ratio <val>] Compression parameters (default: -21dB / 4)");
+    println!("       [--limit <val>]              Lookahead limiter input/output limit (default: 0.1)");
+    println!("       [--freq / --gain <val>]      Parametric equalizer band options");
+    println!("       [--pitch <val>]              Pitch shift scale (default: 1.0)");
+    println!("       [--tempo <val>]              Tempo speed scale (default: 1.0)");
+    println!("       [--loudness <val>]           Target LUFS normalization loudness (default: -16)");
+    println!("       [--silence-db / --silence-duration <val>] Silence detection parameters");
     println!();
 }
 
@@ -699,6 +731,156 @@ pub fn parse_args() -> Result<Commands, String> {
                 tonemap,
             })
         }
+        "audio" => {
+            if args.len() < 5 {
+                return Err("Usage: audio <operation> <input> <output> [options]\n\
+                            Operations: volume, denoise, compress, limit, eq, pitch, tempo, reverb, echo, bass, silencedetect, normalize".to_string());
+            }
+            let operation = args[2].to_lowercase();
+            let input = args[3].clone();
+            let output = args[4].clone();
+
+            let mut volume = None;
+            let mut noise_reduction = None;
+            let mut threshold = None;
+            let mut ratio = None;
+            let mut limit = None;
+            let mut gain = None;
+            let mut frequency = None;
+            let mut pitch = None;
+            let mut tempo = None;
+            let mut loudness = None;
+            let mut silence_db = None;
+            let mut silence_duration = None;
+
+            let mut i = 5;
+            while i < args.len() {
+                match args[i].as_str() {
+                    "--volume" => {
+                        if i + 1 < args.len() {
+                            volume = Some(args[i + 1].clone());
+                            i += 2;
+                        } else {
+                            return Err("Missing value for --volume".to_string());
+                        }
+                    }
+                    "--nr" | "--noise-reduction" => {
+                        if i + 1 < args.len() {
+                            noise_reduction = Some(args[i + 1].clone());
+                            i += 2;
+                        } else {
+                            return Err("Missing value for --noise-reduction".to_string());
+                        }
+                    }
+                    "--threshold" => {
+                        if i + 1 < args.len() {
+                            threshold = Some(args[i + 1].clone());
+                            i += 2;
+                        } else {
+                            return Err("Missing value for --threshold".to_string());
+                        }
+                    }
+                    "--ratio" => {
+                        if i + 1 < args.len() {
+                            ratio = Some(args[i + 1].clone());
+                            i += 2;
+                        } else {
+                            return Err("Missing value for --ratio".to_string());
+                        }
+                    }
+                    "--limit" => {
+                        if i + 1 < args.len() {
+                            limit = Some(args[i + 1].clone());
+                            i += 2;
+                        } else {
+                            return Err("Missing value for --limit".to_string());
+                        }
+                    }
+                    "--gain" => {
+                        if i + 1 < args.len() {
+                            gain = Some(args[i + 1].clone());
+                            i += 2;
+                        } else {
+                            return Err("Missing value for --gain".to_string());
+                        }
+                    }
+                    "--freq" | "--frequency" => {
+                        if i + 1 < args.len() {
+                            frequency = Some(args[i + 1].clone());
+                            i += 2;
+                        } else {
+                            return Err("Missing value for --frequency".to_string());
+                        }
+                    }
+                    "--pitch" => {
+                        if i + 1 < args.len() {
+                            pitch = Some(args[i + 1].parse::<f32>().map_err(|_| "Invalid pitch value")?);
+                            i += 2;
+                        } else {
+                            return Err("Missing value for --pitch".to_string());
+                        }
+                    }
+                    "--tempo" => {
+                        if i + 1 < args.len() {
+                            tempo = Some(args[i + 1].parse::<f32>().map_err(|_| "Invalid tempo value")?);
+                            i += 2;
+                        } else {
+                            return Err("Missing value for --tempo".to_string());
+                        }
+                    }
+                    "--loudness" => {
+                        if i + 1 < args.len() {
+                            loudness = Some(args[i + 1].clone());
+                            i += 2;
+                        } else {
+                            return Err("Missing value for --loudness".to_string());
+                        }
+                    }
+                    "--silence-db" => {
+                        if i + 1 < args.len() {
+                            silence_db = Some(args[i + 1].clone());
+                            i += 2;
+                        } else {
+                            return Err("Missing value for --silence-db".to_string());
+                        }
+                    }
+                    "--silence-duration" => {
+                        if i + 1 < args.len() {
+                            silence_duration = Some(args[i + 1].clone());
+                            i += 2;
+                        } else {
+                            return Err("Missing value for --silence-duration".to_string());
+                        }
+                    }
+                    other => {
+                        return Err(format!("Unknown option for audio: {}", other));
+                    }
+                }
+            }
+
+            let valid_ops = ["volume", "denoise", "compress", "limit", "eq", "pitch", "tempo", "reverb", "echo", "bass", "silencedetect", "normalize"];
+            if !valid_ops.contains(&operation.as_str()) {
+                return Err(format!("Unknown audio operation: '{}'. Available: {}", operation, valid_ops.join(", ")));
+            }
+
+            Ok(Commands::Audio {
+                input,
+                output,
+                operation,
+                volume,
+                noise_reduction,
+                threshold,
+                ratio,
+                limit,
+                gain,
+                frequency,
+                pitch,
+                tempo,
+                loudness,
+                silence_db,
+                silence_duration,
+            })
+        }
         sub => Err(format!("Unknown subcommand: {}", sub)),
     }
 }
@@ -833,6 +1015,42 @@ pub fn execute(cmd: Commands) {
                 contrast,
                 saturation,
                 tonemap.as_deref(),
+            );
+        }
+
+        Commands::Audio {
+            input,
+            output,
+            operation,
+            volume,
+            noise_reduction,
+            threshold,
+            ratio,
+            limit,
+            gain,
+            frequency,
+            pitch,
+            tempo,
+            loudness,
+            silence_db,
+            silence_duration,
+        } => {
+            audio::run(
+                &input,
+                &output,
+                &operation,
+                volume.as_deref(),
+                noise_reduction.as_deref(),
+                threshold.as_deref(),
+                ratio.as_deref(),
+                limit.as_deref(),
+                gain.as_deref(),
+                frequency.as_deref(),
+                pitch,
+                tempo,
+                loudness.as_deref(),
+                silence_db.as_deref(),
+                silence_duration.as_deref(),
             );
         }
 
