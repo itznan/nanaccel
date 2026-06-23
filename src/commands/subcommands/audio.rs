@@ -1,10 +1,210 @@
+use crate::commands::types::Commands;
+
+pub fn parse(args: &[String]) -> Result<Commands, String> {
+    if args.len() < 5 {
+        return Err("Usage: audio <operation> <input> <output> [options]\n\
+                    Operations: volume / volume-control, denoise / noise-reduction, compress / compression, limit / limiter, eq / equalizer, pitch / pitch-shift, tempo / tempo-change, reverb, echo, bass / bass-boost, silencedetect / silence-detection, normalize / audio-normalization".to_string());
+    }
+    let raw_operation = args[2].to_lowercase();
+    let operation = match raw_operation.as_str() {
+        "volume" | "volume-control" | "volume_control" | "volumecontrol" => "volume".to_string(),
+        "denoise" | "noise-reduction" | "noise_reduction" | "noisereduction" => {
+            "denoise".to_string()
+        }
+        "compress" | "compression" => "compress".to_string(),
+        "limit" | "limiter" => "limit".to_string(),
+        "eq" | "equalizer" => "eq".to_string(),
+        "pitch" | "pitch-shift" | "pitch_shift" | "pitch-shifting" | "pitch_shifting" => {
+            "pitch".to_string()
+        }
+        "tempo" | "tempo-change" | "tempo_change" => "tempo".to_string(),
+        "reverb" => "reverb".to_string(),
+        "echo" => "echo".to_string(),
+        "bass" | "bass-boost" | "bass_boost" | "bassboost" => "bass".to_string(),
+        "silencedetect" | "silence-detection" | "silence_detection" | "silence-detect"
+        | "silencedetection" => "silencedetect".to_string(),
+        "normalize" | "audio-normalization" | "audio_normalization" | "normalization" => {
+            "normalize".to_string()
+        }
+        other => other.to_string(),
+    };
+    let input = args[3].clone();
+    let output = args[4].clone();
+
+    let mut volume = None;
+    let mut noise_reduction = None;
+    let mut threshold = None;
+    let mut ratio = None;
+    let mut limit = None;
+    let mut gain = None;
+    let mut frequency = None;
+    let mut pitch = None;
+    let mut tempo = None;
+    let mut loudness = None;
+    let mut silence_db = None;
+    let mut silence_duration = None;
+
+    let mut i = 5;
+    while i < args.len() {
+        match args[i].as_str() {
+            "--volume" => {
+                if i + 1 < args.len() {
+                    volume = Some(args[i + 1].clone());
+                    i += 2;
+                } else {
+                    return Err("Missing value for --volume".to_string());
+                }
+            }
+            "--nr" | "--noise-reduction" => {
+                if i + 1 < args.len() {
+                    noise_reduction = Some(args[i + 1].clone());
+                    i += 2;
+                } else {
+                    return Err("Missing value for --noise-reduction".to_string());
+                }
+            }
+            "--threshold" => {
+                if i + 1 < args.len() {
+                    threshold = Some(args[i + 1].clone());
+                    i += 2;
+                } else {
+                    return Err("Missing value for --threshold".to_string());
+                }
+            }
+            "--ratio" => {
+                if i + 1 < args.len() {
+                    ratio = Some(args[i + 1].clone());
+                    i += 2;
+                } else {
+                    return Err("Missing value for --ratio".to_string());
+                }
+            }
+            "--limit" => {
+                if i + 1 < args.len() {
+                    limit = Some(args[i + 1].clone());
+                    i += 2;
+                } else {
+                    return Err("Missing value for --limit".to_string());
+                }
+            }
+            "--gain" => {
+                if i + 1 < args.len() {
+                    gain = Some(args[i + 1].clone());
+                    i += 2;
+                } else {
+                    return Err("Missing value for --gain".to_string());
+                }
+            }
+            "--freq" | "--frequency" => {
+                if i + 1 < args.len() {
+                    frequency = Some(args[i + 1].clone());
+                    i += 2;
+                } else {
+                    return Err("Missing value for --frequency".to_string());
+                }
+            }
+            "--pitch" => {
+                if i + 1 < args.len() {
+                    pitch = Some(
+                        args[i + 1]
+                            .parse::<f32>()
+                            .map_err(|_| "Invalid pitch value")?,
+                    );
+                    i += 2;
+                } else {
+                    return Err("Missing value for --pitch".to_string());
+                }
+            }
+            "--tempo" => {
+                if i + 1 < args.len() {
+                    tempo = Some(
+                        args[i + 1]
+                            .parse::<f32>()
+                            .map_err(|_| "Invalid tempo value")?,
+                    );
+                    i += 2;
+                } else {
+                    return Err("Missing value for --tempo".to_string());
+                }
+            }
+            "--loudness" => {
+                if i + 1 < args.len() {
+                    loudness = Some(args[i + 1].clone());
+                    i += 2;
+                } else {
+                    return Err("Missing value for --loudness".to_string());
+                }
+            }
+            "--silence-db" => {
+                if i + 1 < args.len() {
+                    silence_db = Some(args[i + 1].clone());
+                    i += 2;
+                } else {
+                    return Err("Missing value for --silence-db".to_string());
+                }
+            }
+            "--silence-duration" => {
+                if i + 1 < args.len() {
+                    silence_duration = Some(args[i + 1].clone());
+                    i += 2;
+                } else {
+                    return Err("Missing value for --silence-duration".to_string());
+                }
+            }
+            other => {
+                return Err(format!("Unknown option for audio: {}", other));
+            }
+        }
+    }
+
+    let valid_ops = [
+        "volume",
+        "denoise",
+        "compress",
+        "limit",
+        "eq",
+        "pitch",
+        "tempo",
+        "reverb",
+        "echo",
+        "bass",
+        "silencedetect",
+        "normalize",
+    ];
+    if !valid_ops.contains(&operation.as_str()) {
+        return Err(format!(
+            "Unknown audio operation: '{}'. Available: {}",
+            operation,
+            valid_ops.join(", ")
+        ));
+    }
+
+    Ok(Commands::Audio {
+        input,
+        output,
+        operation,
+        volume,
+        noise_reduction,
+        threshold,
+        ratio,
+        limit,
+        gain,
+        frequency,
+        pitch,
+        tempo,
+        loudness,
+        silence_db,
+        silence_duration,
+    })
+}
+
 use std::fs::File;
 use std::io::Write;
 use symphonia::core::codecs::audio::AudioDecoderOptions;
 use symphonia::core::formats::FormatOptions;
+use symphonia::core::formats::probe::Hint;
 use symphonia::core::io::MediaSourceStream;
 use symphonia::core::meta::MetadataOptions;
-use symphonia::core::formats::probe::Hint;
 
 #[allow(clippy::too_many_arguments)]
 pub fn run(
@@ -46,10 +246,7 @@ pub fn run(
         silence_duration,
     ) {
         Ok(_) => println!("\x1b[1m\x1b[32mNative audio operation completed successfully!\x1b[0m"),
-        Err(e) => eprintln!(
-            "\x1b[1m\x1b[31mNative audio operation failed: {}\x1b[0m",
-            e
-        ),
+        Err(e) => eprintln!("\x1b[1m\x1b[31mNative audio operation failed: {}\x1b[0m", e),
     }
 }
 
@@ -87,7 +284,12 @@ fn run_audio_operation(
     let track = format
         .tracks()
         .iter()
-        .find(|t| t.codec_params.as_ref().map(|p| p.is_audio()).unwrap_or(false))
+        .find(|t| {
+            t.codec_params
+                .as_ref()
+                .map(|p| p.is_audio())
+                .unwrap_or(false)
+        })
         .ok_or("No audio track found")?;
 
     let audio_params = track
@@ -117,7 +319,9 @@ fn run_audio_operation(
             continue;
         }
 
-        let decoded = decoder.decode(&packet).map_err(|e| format!("Decode error: {}", e))?;
+        let decoded = decoder
+            .decode(&packet)
+            .map_err(|e| format!("Decode error: {}", e))?;
 
         let spec = decoded.spec();
         sample_rate = spec.rate();
@@ -159,7 +363,9 @@ fn run_audio_operation(
         "compress" => {
             let thresh_str = threshold.unwrap_or("-21");
             let t_db = if thresh_str.to_lowercase().ends_with("db") {
-                thresh_str[..thresh_str.len() - 2].parse::<f32>().unwrap_or(-21.0)
+                thresh_str[..thresh_str.len() - 2]
+                    .parse::<f32>()
+                    .unwrap_or(-21.0)
             } else {
                 thresh_str.parse::<f32>().unwrap_or(-21.0)
             };
@@ -222,7 +428,8 @@ fn run_audio_operation(
             let delays = [30, 45, 60, 80];
             let decays = [0.4, 0.3, 0.2, 0.1];
             for (d, dec) in delays.iter().zip(decays.iter()) {
-                let delay_samples = ((*d as f32 / 1000.0) * sample_rate as f32) as usize * channels as usize;
+                let delay_samples =
+                    ((*d as f32 / 1000.0) * sample_rate as f32) as usize * channels as usize;
                 if delay_samples < processed_data.len() {
                     for i in delay_samples..processed_data.len() {
                         output[i] += processed_data[i - delay_samples] * dec;
@@ -263,7 +470,10 @@ fn run_audio_operation(
                     let rms = (sum_sq / chunk_size as f32).sqrt();
                     if rms < threshold_amp {
                         let sec = (chunk_idx / channels as usize) as f32 / sample_rate as f32;
-                        println!("Silence detected starting at: {:.2} seconds (RMS: {:.4})", sec, rms);
+                        println!(
+                            "Silence detected starting at: {:.2} seconds (RMS: {:.4})",
+                            sec, rms
+                        );
                     }
                     chunk_idx += chunk_size;
                 }
@@ -288,7 +498,8 @@ fn run_audio_operation(
     }
 
     // 3. Write output to WAV file
-    let mut file = File::create(output).map_err(|e| format!("Failed to create output file: {}", e))?;
+    let mut file =
+        File::create(output).map_err(|e| format!("Failed to create output file: {}", e))?;
 
     let num_samples = processed_data.len() as u32;
     let byte_rate = sample_rate * channels as u32 * 2;
@@ -297,20 +508,29 @@ fn run_audio_operation(
     let chunk_size = 36 + subchunk2_size;
 
     file.write_all(b"RIFF").map_err(|e| e.to_string())?;
-    file.write_all(&chunk_size.to_le_bytes()).map_err(|e| e.to_string())?;
+    file.write_all(&chunk_size.to_le_bytes())
+        .map_err(|e| e.to_string())?;
     file.write_all(b"WAVE").map_err(|e| e.to_string())?;
 
     file.write_all(b"fmt ").map_err(|e| e.to_string())?;
-    file.write_all(&16u32.to_le_bytes()).map_err(|e| e.to_string())?;
-    file.write_all(&1u16.to_le_bytes()).map_err(|e| e.to_string())?;
-    file.write_all(&channels.to_le_bytes()).map_err(|e| e.to_string())?;
-    file.write_all(&sample_rate.to_le_bytes()).map_err(|e| e.to_string())?;
-    file.write_all(&byte_rate.to_le_bytes()).map_err(|e| e.to_string())?;
-    file.write_all(&block_align.to_le_bytes()).map_err(|e| e.to_string())?;
-    file.write_all(&16u16.to_le_bytes()).map_err(|e| e.to_string())?;
+    file.write_all(&16u32.to_le_bytes())
+        .map_err(|e| e.to_string())?;
+    file.write_all(&1u16.to_le_bytes())
+        .map_err(|e| e.to_string())?;
+    file.write_all(&channels.to_le_bytes())
+        .map_err(|e| e.to_string())?;
+    file.write_all(&sample_rate.to_le_bytes())
+        .map_err(|e| e.to_string())?;
+    file.write_all(&byte_rate.to_le_bytes())
+        .map_err(|e| e.to_string())?;
+    file.write_all(&block_align.to_le_bytes())
+        .map_err(|e| e.to_string())?;
+    file.write_all(&16u16.to_le_bytes())
+        .map_err(|e| e.to_string())?;
 
     file.write_all(b"data").map_err(|e| e.to_string())?;
-    file.write_all(&subchunk2_size.to_le_bytes()).map_err(|e| e.to_string())?;
+    file.write_all(&subchunk2_size.to_le_bytes())
+        .map_err(|e| e.to_string())?;
 
     for &sample in &processed_data {
         let clamped = sample.clamp(-1.0, 1.0);
@@ -319,7 +539,8 @@ fn run_audio_operation(
         } else {
             (clamped * 32767.0) as i16
         };
-        file.write_all(&val.to_le_bytes()).map_err(|e| e.to_string())?;
+        file.write_all(&val.to_le_bytes())
+            .map_err(|e| e.to_string())?;
     }
 
     Ok(())

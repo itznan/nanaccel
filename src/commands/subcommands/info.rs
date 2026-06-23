@@ -1,5 +1,9 @@
+use crate::commands::types::Commands;
 use crate::gpu_utils::{query_dynamic_gpu_stats, query_static_gpu_info};
 
+pub fn parse(_args: &[String]) -> Result<Commands, String> {
+    Ok(Commands::Info)
+}
 
 pub fn run() {
     // Get Static GPU info
