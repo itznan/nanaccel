@@ -16,6 +16,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Fetch all history for automated changelog generation
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
@@ -23,21 +25,34 @@ jobs:
       - name: Rust Cache
         uses: Swatinem/rust-cache@v2
 
+      - name: Run Tests
+        run: cargo test --all-targets
+
       - name: Build Release Binary
         run: cargo build --release
 
-      - name: Package Binary
+      - name: Package Binary and Assets
         shell: pwsh
         run: |
-          New-Item -ItemType Directory -Force -Path release
-          Copy-Item target/release/nann.exe release/
-          Compress-Archive -Path release/* -DestinationPath nann-windows-x86_64.zip
+          New-Item -ItemType Directory -Force -Path release-pkg
+          Copy-Item target/release/nann.exe release-pkg/
+          if (Test-Path LICENSE) { Copy-Item LICENSE release-pkg/ }
+          if (Test-Path README.md) { Copy-Item README.md release-pkg/ }
+          Compress-Archive -Path release-pkg/* -DestinationPath nann-windows-x86_64.zip
+          
+          # Generate SHA256 checksum for download verification
+          $hash = (Get-FileHash nann-windows-x86_64.zip -Algorithm SHA256).Hash
+          "$hash  nann-windows-x86_64.zip" | Out-File -FilePath nann-windows-x86_64.zip.sha256 -Encoding ascii
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: nann-windows-x86_64.zip
+          files: |
+            nann-windows-x86_64.zip
+            nann-windows-x86_64.zip.sha256
           draft: false
           prerelease: false
+          generate_release_notes: true
+          name: Release ${{ github.ref_name }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
