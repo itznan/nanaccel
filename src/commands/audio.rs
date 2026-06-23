@@ -68,9 +68,12 @@ fn run_audio_operation(
             format!("afftdn=nr={}", nr)
         }
         "compress" => {
-            let thresh = threshold.unwrap_or("-21");
+            let mut thresh = threshold.unwrap_or("-21").to_string();
+            if !thresh.to_lowercase().ends_with("db") {
+                thresh.push_str("dB");
+            }
             let rat = ratio.unwrap_or("4");
-            format!("acompressor=threshold={}dB:ratio={}", thresh, rat)
+            format!("acompressor=threshold={}:ratio={}", thresh, rat)
         }
         "limit" => {
             let lim = limit.unwrap_or("0.1");
@@ -90,8 +93,8 @@ fn run_audio_operation(
             format!("atempo={}", t)
         }
         "reverb" => {
-            // Room simulation reverb with aecho
-            "aecho=0.8:0.88:60:0.4".to_string()
+            // Richer room simulation using a multi-tap delay line
+            "aecho=0.8:0.9:30|45|60|80:0.4|0.3|0.2|0.1".to_string()
         }
         "echo" => {
             "aecho=0.8:0.9:1000:0.3".to_string()

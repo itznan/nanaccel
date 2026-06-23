@@ -165,8 +165,11 @@ pub fn print_help() {
     println!(
         "  \x1b[32maudio <operation> <input> <output>\x1b[0m Audio editing utility"
     );
-    println!("       Operations:                  volume, denoise, compress, limit, eq, pitch, tempo,");
-    println!("                                    reverb, echo, bass, silencedetect, normalize");
+    println!("       Operations:                  volume / volume-control, denoise / noise-reduction,");
+    println!("                                    compress / compression, limit / limiter, eq / equalizer,");
+    println!("                                    pitch / pitch-shift, tempo / tempo-change, reverb, echo,");
+    println!("                                    bass / bass-boost, silencedetect / silence-detection,");
+    println!("                                    normalize / audio-normalization");
     println!("       [--volume <val>]             Volume scale multiplier or dB (default: 1.0)");
     println!("       [--nr <val>]                 Noise reduction level (default: 12)");
     println!("       [--threshold / --ratio <val>] Compression parameters (default: -21dB / 4)");
@@ -734,9 +737,24 @@ pub fn parse_args() -> Result<Commands, String> {
         "audio" => {
             if args.len() < 5 {
                 return Err("Usage: audio <operation> <input> <output> [options]\n\
-                            Operations: volume, denoise, compress, limit, eq, pitch, tempo, reverb, echo, bass, silencedetect, normalize".to_string());
+                            Operations: volume / volume-control, denoise / noise-reduction, compress / compression, limit / limiter, eq / equalizer, pitch / pitch-shift, tempo / tempo-change, reverb, echo, bass / bass-boost, silencedetect / silence-detection, normalize / audio-normalization".to_string());
             }
-            let operation = args[2].to_lowercase();
+            let raw_operation = args[2].to_lowercase();
+            let operation = match raw_operation.as_str() {
+                "volume" | "volume-control" | "volume_control" | "volumecontrol" => "volume".to_string(),
+                "denoise" | "noise-reduction" | "noise_reduction" | "noisereduction" => "denoise".to_string(),
+                "compress" | "compression" => "compress".to_string(),
+                "limit" | "limiter" => "limit".to_string(),
+                "eq" | "equalizer" => "eq".to_string(),
+                "pitch" | "pitch-shift" | "pitch_shift" | "pitch-shifting" | "pitch_shifting" => "pitch".to_string(),
+                "tempo" | "tempo-change" | "tempo_change" => "tempo".to_string(),
+                "reverb" => "reverb".to_string(),
+                "echo" => "echo".to_string(),
+                "bass" | "bass-boost" | "bass_boost" | "bassboost" => "bass".to_string(),
+                "silencedetect" | "silence-detection" | "silence_detection" | "silence-detect" | "silencedetection" => "silencedetect".to_string(),
+                "normalize" | "audio-normalization" | "audio_normalization" | "normalization" => "normalize".to_string(),
+                other => other.to_string(),
+            };
             let input = args[3].clone();
             let output = args[4].clone();
 
