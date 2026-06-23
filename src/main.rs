@@ -223,7 +223,31 @@ fn parse_args() -> Result<Commands, String> {
                 match args[i].as_str() {
                     "-c" | "--codec" => {
                         if i + 1 < args.len() {
-                            codec = args[i + 1].clone();
+                            let target_codec = args[i + 1].to_lowercase();
+                            if target_codec == "h264"
+                                || target_codec == "h.264"
+                                || target_codec == "avc"
+                            {
+                                codec = "h264".to_string();
+                            } else if target_codec == "hevc"
+                                || target_codec == "h265"
+                                || target_codec == "h.265"
+                            {
+                                codec = "hevc".to_string();
+                            } else if target_codec == "av1" {
+                                println!(
+                                    "\x1b[33mNote: AV1 hardware encoding is supported on RTX 40-series and newer. \
+                                    However, to ensure standard MP4 container compatibility, fallback to 'hevc' (H.265) hardware encoding is applied.\x1b[0m"
+                                );
+                                codec = "hevc".to_string();
+                            } else {
+                                println!(
+                                    "\x1b[33mWarning: Codec '{}' cannot be encoded on the GPU (NVIDIA NVENC only supports H.264, HEVC, and AV1). \
+                                    To maintain 0% CPU usage, falling back to 'h264' hardware encoding.\x1b[0m",
+                                    args[i + 1]
+                                );
+                                codec = "h264".to_string();
+                            }
                             i += 2;
                         } else {
                             return Err("Missing value for --codec".to_string());
