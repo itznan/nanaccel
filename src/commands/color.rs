@@ -71,5 +71,5 @@ fn run_color_operation(
           nanaccel transcode <input> <output>\x1b[0m",
         operation
     );
-    Err("FFmpeg subprocess execution disabled. Please run native GPU transcode/playback options.".to_string())
+    Err("Subprocess execution is disabled. Please run native GPU transcode/playback options.".to_string())
 }
