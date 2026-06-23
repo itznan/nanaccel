@@ -1,5 +1,6 @@
 use std::process::Command;
 
+#[allow(clippy::too_many_arguments)]
 pub fn run(
     input: &str,
     output: &str,
@@ -47,6 +48,7 @@ pub fn run(
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 fn run_video_edit_operation(
     input: &str,
     output: &str,
@@ -200,7 +202,7 @@ fn run_video_edit_operation(
         "stabilize" => {
             println!("Starting Pass 1 for video stabilization (detecting shakiness)...");
             let status1 = Command::new("ffmpeg")
-                .args(&[
+                .args([
                     "-y",
                     "-i",
                     input,

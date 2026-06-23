@@ -82,6 +82,7 @@ unsafe fn get_texture_from_buffer(buffer: &IMFMediaBuffer) -> Result<ID3D11Textu
     Ok(texture.unwrap())
 }
 
+#[allow(clippy::collapsible_if)]
 pub fn play_gpu(
     input_path: &str,
     _no_audio: bool,

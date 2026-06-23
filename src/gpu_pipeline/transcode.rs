@@ -52,6 +52,7 @@ fn extract_sps_pps(annex_b: &[u8]) -> (Vec<u8>, Vec<u8>) {
     (sps, pps)
 }
 
+#[allow(clippy::collapsible_if)]
 pub fn transcode_gpu(
     input_path: &str,
     output_path: &str,

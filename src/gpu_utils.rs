@@ -18,7 +18,7 @@ pub struct DynamicGpuStats {
 
 pub fn query_static_gpu_info() -> Result<StaticGpuInfo, String> {
     let output = Command::new("nvidia-smi")
-        .args(&[
+        .args([
             "--query-gpu=name,driver_version,memory.total",
             "--format=csv,noheader,nounits",
         ])
@@ -53,7 +53,7 @@ pub fn query_static_gpu_info() -> Result<StaticGpuInfo, String> {
 
 pub fn query_dynamic_gpu_stats() -> Result<DynamicGpuStats, String> {
     let output = Command::new("nvidia-smi")
-        .args(&[
+        .args([
             "--query-gpu=utilization.gpu,utilization.memory,utilization.decoder,utilization.encoder,memory.used,temperature.gpu,power.draw",
             "--format=csv,noheader,nounits",
         ])
@@ -107,10 +107,8 @@ pub fn check_nvidia_gpu() -> bool {
         .stderr(Stdio::null())
         .status();
 
-    if let Ok(s) = status {
-        if s.success() {
-            return true;
-        }
+    if status.is_ok_and(|s| s.success()) {
+        return true;
     }
 
     false

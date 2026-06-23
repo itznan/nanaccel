@@ -1,5 +1,6 @@
 use std::process::Command;
 
+#[allow(clippy::too_many_arguments)]
 pub fn run(
     input: &str,
     output: &str,
@@ -46,6 +47,7 @@ pub fn run(
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 fn run_color_operation(
     input: &str,
     output: &str,
