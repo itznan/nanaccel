@@ -74,6 +74,16 @@ nann transcode input.mp4 output.mp4 -c h264 -p p4 -b 5M --scale 1280x720
 * `-b, --bitrate <bitrate>` : Target bitrate (e.g. `5M`, `800k`, `3000000`).
 * `--scale <width>x<height>` : High-speed GPU resizing. (e.g., `--scale 1920x1080`).
 
+### 4. GPU-Accelerated Screenshot (Frame Extraction)
+Decodes a specific frame on the GPU and saves it directly to a high-fidelity image file:
+```bash
+nann screenshot input.mp4 output.png -t 5000
+```
+**Options:**
+* `-t, --time <ms>` : Timestamp in milliseconds (default: 0).
+**Supported Image Formats:**
+PNG, JPEG, BMP, TIFF, WebP, GIF, and HEIF/AVIF (fully hardware-decoded/saved using Windows Imaging Component (WIC)). EXR, HDR, and SVG formats are dynamically supported if WIC system extensions are registered on the host computer.
+
 ---
 
 ## 📦 Building
