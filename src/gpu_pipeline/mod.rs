@@ -1,9 +1,11 @@
 pub mod play;
+pub mod record;
 pub mod screenshot;
 pub mod shader;
 pub mod transcode;
 
 pub use play::play_gpu;
+pub use record::record_gpu;
 pub use screenshot::screenshot_gpu;
 pub use shader::shader_gpu;
 pub use transcode::transcode_gpu;

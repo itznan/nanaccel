@@ -1,5 +1,5 @@
-# Core Rust / Cargo
 /target/
+/nanaccel-windows-x86_64/target/
 
 # Cargo.lock is NOT ignored for binary projects to ensure reproducible builds.
 # If this was a pure library project, we would ignore it.

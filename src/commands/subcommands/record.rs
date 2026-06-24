@@ -57,8 +57,6 @@ pub fn parse(args: &[String]) -> Result<Commands, String> {
     })
 }
 
-use std::time::{Duration, Instant};
-
 pub fn run(output: &str, fps: Option<u32>, bitrate: Option<&str>, duration: Option<u32>) {
     let target_fps = fps.unwrap_or(60);
     let target_bitrate = bitrate.unwrap_or("8M");
@@ -70,27 +68,22 @@ pub fn run(output: &str, fps: Option<u32>, bitrate: Option<&str>, duration: Opti
     println!("  Target Bitrate   : {}", target_bitrate);
     println!("  Duration Limit   : {} seconds", target_duration);
 
-    println!("\x1b[36m[DXGI] Querying active desktop output monitor...");
-    println!("[D3D11] Initializing hardware device and texture buffers...");
-    println!("[NVENC] Configuring H.264/HEVC encoder pipeline...");
-    println!("[WASAPI] Initializing desktop loopback audio capture...");
-    println!("\x1b[0mStarting recording session...");
-
-    let _start = Instant::now();
-    let mut frames_captured = 0;
-
-    for sec in 1..=target_duration {
-        std::thread::sleep(Duration::from_secs(1));
-        frames_captured += target_fps;
-        println!(
-            "Recording: {}s / {}s (Captured {} frames, 0 drops) - Bitrate: {}",
-            sec, target_duration, frames_captured, target_bitrate
-        );
-    }
-
-    println!("\x1b[32mFinalizing MP4 container metadata via native muxer...");
-    println!(
-        "\x1b[1m\x1b[32mRecording completed successfully! Saved to: {}\x1b[0m",
-        output
+    let record_result = crate::gpu_pipeline::record_gpu(
+        output,
+        Some(target_fps),
+        Some(target_bitrate),
+        Some(target_duration),
     );
+
+    match record_result {
+        Ok(_) => {
+            println!(
+                "\x1b[1m\x1b[32mRecording completed successfully! Saved to: {}\x1b[0m",
+                output
+            );
+        }
+        Err(e) => {
+            eprintln!("\x1b[1m\x1b[31mRecording failed: {}\x1b[0m", e);
+        }
+    }
 }
