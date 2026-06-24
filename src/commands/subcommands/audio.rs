@@ -327,8 +327,8 @@ fn run_audio_operation(
         sample_rate = spec.rate();
         channels = spec.channels().count() as u16;
 
-        let mut frame_pcm: Vec<f32> = Vec::new();
-        decoded.copy_to_vec_interleaved(&mut frame_pcm);
+        let mut frame_pcm = vec![0.0f32; decoded.samples_interleaved()];
+        decoded.copy_to_slice_interleaved(&mut frame_pcm);
         pcm_data.extend(frame_pcm);
     }
 

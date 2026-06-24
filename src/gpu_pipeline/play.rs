@@ -10,6 +10,8 @@ use windows::Win32::System::Com::*;
 use windows::Win32::UI::WindowsAndMessaging::*;
 use windows::core::*;
 
+use super::get_texture_from_buffer;
+
 unsafe extern "system" fn window_proc(
     hwnd: HWND,
     msg: u32,
@@ -71,15 +73,6 @@ pub fn create_video_window(width: u32, height: u32) -> Result<HWND> {
 
         Ok(hwnd)
     }
-}
-
-unsafe fn get_texture_from_buffer(buffer: &IMFMediaBuffer) -> Result<ID3D11Texture2D> {
-    let dxgi_buffer: IMFDXGIBuffer = buffer.cast()?;
-    let mut texture: Option<ID3D11Texture2D> = None;
-    unsafe {
-        dxgi_buffer.GetResource(&ID3D11Texture2D::IID, &mut texture as *mut _ as *mut *mut _)?;
-    }
-    Ok(texture.unwrap())
 }
 
 #[allow(clippy::collapsible_if)]
