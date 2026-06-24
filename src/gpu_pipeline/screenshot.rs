@@ -114,11 +114,12 @@ pub fn screenshot_gpu(
         let mut feature_level = D3D_FEATURE_LEVEL_11_0;
         let levels = [D3D_FEATURE_LEVEL_11_0];
 
+        println!("[NanAccel Debug] Creating D3D11 Device with BGRA & Video support...");
         D3D11CreateDevice(
             None::<&IDXGIAdapter>,
             D3D_DRIVER_TYPE_HARDWARE,
             HMODULE(std::ptr::null_mut()),
-            D3D11_CREATE_DEVICE_BGRA_SUPPORT,
+            D3D11_CREATE_DEVICE_FLAG(D3D11_CREATE_DEVICE_BGRA_SUPPORT.0 | D3D11_CREATE_DEVICE_VIDEO_SUPPORT.0),
             Some(&levels),
             D3D11_SDK_VERSION,
             Some(&mut d3d_device as *mut _),
@@ -129,6 +130,11 @@ pub fn screenshot_gpu(
         let device: ID3D11Device = d3d_device.unwrap();
         let context = d3d_context.unwrap();
 
+        println!("[NanAccel Debug] Enabling multithread protection on D3D11 device...");
+        let multithread: ID3D11Multithread = device.cast().map_err(|e| format!("Cast to ID3D11Multithread failed: {}", e))?;
+        let _ = multithread.SetMultithreadProtected(true);
+
+        println!("[NanAccel Debug] Creating DXGI device manager...");
         let mut token = 0;
         let mut manager_opt = None;
         MFCreateDXGIDeviceManager(&mut token, &mut manager_opt)
@@ -137,6 +143,8 @@ pub fn screenshot_gpu(
         manager
             .ResetDevice(&device, token)
             .map_err(|e| format!("ResetDevice failed: {}", e))?;
+
+        println!("[NanAccel Debug] Initializing Media Foundation source reader from URL: {} ...", input_path);
 
         let mut attr_opt = None;
         MFCreateAttributes(&mut attr_opt, 1)
