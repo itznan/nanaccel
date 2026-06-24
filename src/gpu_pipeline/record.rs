@@ -69,15 +69,24 @@ pub fn record_gpu(
         let target_duration = duration_sec.unwrap_or(5);
 
         // 1. Create DXGI Factory and find default adapter & output
-        let factory: IDXGIFactory1 = CreateDXGIFactory1().map_err(|e| format!("Failed to create DXGI Factory: {}", e))?;
+        let factory: IDXGIFactory1 =
+            CreateDXGIFactory1().map_err(|e| format!("Failed to create DXGI Factory: {}", e))?;
 
-        let adapter: IDXGIAdapter1 = factory.EnumAdapters1(0).map_err(|e| format!("EnumAdapters1 failed: {}", e))?;
+        let adapter: IDXGIAdapter1 = factory
+            .EnumAdapters1(0)
+            .map_err(|e| format!("EnumAdapters1 failed: {}", e))?;
 
-        let output: IDXGIOutput = adapter.EnumOutputs(0).map_err(|e| format!("EnumOutputs failed: {}", e))?;
-        let output1: IDXGIOutput1 = output.cast().map_err(|e| format!("Cast to IDXGIOutput1 failed: {}", e))?;
+        let output: IDXGIOutput = adapter
+            .EnumOutputs(0)
+            .map_err(|e| format!("EnumOutputs failed: {}", e))?;
+        let output1: IDXGIOutput1 = output
+            .cast()
+            .map_err(|e| format!("Cast to IDXGIOutput1 failed: {}", e))?;
 
         // 2. Query Desktop resolution from output description
-        let desc = output.GetDesc().map_err(|e| format!("GetDesc failed: {}", e))?;
+        let desc = output
+            .GetDesc()
+            .map_err(|e| format!("GetDesc failed: {}", e))?;
         let rect = desc.DesktopCoordinates;
         let mut width = (rect.right - rect.left) as u32;
         let mut height = (rect.bottom - rect.top) as u32;
@@ -119,9 +128,13 @@ pub fn record_gpu(
         let _ = multithread.SetMultithreadProtected(true);
 
         // 4. Initialize Desktop Duplication
-        let duplication: IDXGIOutputDuplication = output1
-            .DuplicateOutput(&device)
-            .map_err(|e| format!("DuplicateOutput failed: {}. Make sure you are on a primary monitor.", e))?;
+        let duplication: IDXGIOutputDuplication =
+            output1.DuplicateOutput(&device).map_err(|e| {
+                format!(
+                    "DuplicateOutput failed: {}. Make sure you are on a primary monitor.",
+                    e
+                )
+            })?;
 
         // 5. Create a permanent input texture in BGRA format (matching screen format)
         let texture_desc = D3D11_TEXTURE2D_DESC {
@@ -175,7 +188,8 @@ pub fn record_gpu(
                 val = num;
             }
         }
-        nv_config.preset_cfg.rc_params.rate_control_mode = nvenc::sys::enums::NVencParamsRcMode::VBR;
+        nv_config.preset_cfg.rc_params.rate_control_mode =
+            nvenc::sys::enums::NVencParamsRcMode::VBR;
         nv_config.preset_cfg.rc_params.average_bit_rate = val;
 
         let init_params = InitParams {
@@ -209,7 +223,10 @@ pub fn record_gpu(
         let total_frames = (target_fps * target_duration) as usize;
         let frame_duration = Duration::from_secs_f64(1.0 / target_fps as f64);
 
-        println!("[Record] Screen recording started for {} seconds...", target_duration);
+        println!(
+            "[Record] Screen recording started for {} seconds...",
+            target_duration
+        );
 
         while frame_count < total_frames {
             let loop_start = Instant::now();
@@ -217,23 +234,24 @@ pub fn record_gpu(
             let mut desktop_resource: Option<IDXGIResource> = None;
 
             // Acquire desktop frame
-            let acquired = match duplication.AcquireNextFrame(10, &mut frame_info, &mut desktop_resource) {
-                Ok(_) => {
-                    let res = desktop_resource.unwrap();
-                    let tex: ID3D11Texture2D = res.cast().map_err(|e| e.to_string())?;
-                    // Copy desktop texture directly to our registered ARGB input texture on the GPU
-                    context.CopyResource(&input_texture, &tex);
-                    true
-                }
-                Err(e) => {
-                    if e.code() == DXGI_ERROR_ACCESS_LOST {
-                        println!("[DXGI] Access lost to desktop output duplication.");
-                        break;
+            let acquired =
+                match duplication.AcquireNextFrame(10, &mut frame_info, &mut desktop_resource) {
+                    Ok(_) => {
+                        let res = desktop_resource.unwrap();
+                        let tex: ID3D11Texture2D = res.cast().map_err(|e| e.to_string())?;
+                        // Copy desktop texture directly to our registered ARGB input texture on the GPU
+                        context.CopyResource(&input_texture, &tex);
+                        true
                     }
-                    // Wait timeout is normal; we reuse the last frame's contents
-                    false
-                }
-            };
+                    Err(e) => {
+                        if e.code() == DXGI_ERROR_ACCESS_LOST {
+                            println!("[DXGI] Access lost to desktop output duplication.");
+                            break;
+                        }
+                        // Wait timeout is normal; we reuse the last frame's contents
+                        false
+                    }
+                };
 
             // Encode the ARGB texture with NVENC
             let bitstream = encoder
@@ -272,13 +290,16 @@ pub fn record_gpu(
                 }
 
                 if let Some(m) = &mut muxer {
-                    let is_keyframe = encoded_bytes.contains(&0x05) || encoded_bytes.contains(&0x07);
+                    let is_keyframe =
+                        encoded_bytes.contains(&0x05) || encoded_bytes.contains(&0x07);
                     m.write_video_frame(encoded_bytes, (1000 / target_fps) as u32, is_keyframe)?;
                 }
             }
 
             if acquired {
-                duplication.ReleaseFrame().map_err(|e| format!("ReleaseFrame failed: {}", e))?;
+                duplication
+                    .ReleaseFrame()
+                    .map_err(|e| format!("ReleaseFrame failed: {}", e))?;
             }
 
             frame_count += 1;
