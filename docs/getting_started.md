@@ -57,3 +57,10 @@ Apply the grayscale pixel shader to the sample video:
 .\nanaccel.exe shader classroom.mp4 output_grayscale.mp4 grayscale.hlsl
 ```
 *This compiles `grayscale.hlsl` at runtime, runs the shader on each video frame using the GPU, and writes the output as a valid H.264 file.*
+
+### Record Desktop Screen
+Record your primary desktop monitor directly using hardware-accelerated capture and NVENC encoding:
+```bash
+.\nanaccel.exe record output_recording.mp4 --duration 10 --fps 60 -b 10M
+```
+*This captures the screen at 60 FPS using DXGI Desktop Duplication, copies the textures on the GPU, and encodes them using NVENC to `output_recording.mp4` with a 10 Mbps bitrate.*

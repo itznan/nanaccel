@@ -45,3 +45,21 @@ All frame sizing and color manipulations are handled on D3D11 hardware contexts:
 Encodes video streams directly on the GPU silicon:
 - Registers the D3D11 texture resource with NVENC using `register_resource_dx11`.
 - Performs real-time hardware encoding, outputting Annex B bitstream packets.
+
+### 4. DXGI Desktop Duplication (Screen Recording)
+Captures desktop frame updates directly from the graphics subsystem:
+- Uses `IDXGIOutput1::DuplicateOutput` to obtain screen frame textures on the GPU (`ID3D11Texture2D`).
+- Reuses a permanent registered input texture to avoid allocation/registration overhead.
+- Leverages direct GPU-to-GPU memory copies (`CopyResource`) to transfer frames, enabling capture and encoding at 60+ FPS with near-zero CPU overhead.
+
+---
+
+## 3. Screen Duplication Recording Pipeline
+
+```mermaid
+graph TD
+    A[Desktop screen updates] -->|DXGI Desktop Dupe| B[BGRA Frame Texture]
+    B -->|GPU CopyResource| C[ARGB Permanent Input Texture]
+    C -->|NVENC RegisterResource| D[NVENC Hardware Encoder]
+    D -->|H.264 packets| E[Native MP4 Muxer]
+```
