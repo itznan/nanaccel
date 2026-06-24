@@ -1,8 +1,12 @@
-# NanAccel 🚀
+<p align="center">
+  <img src="logo.png" alt="nanaccel Logo" width="200"/>
+</p>
 
-**NanAccel** is a next-generation, high-performance video CLI tool and engine built in pure Rust, designed as a lightweight and zero-dependency competitor to FFmpeg for hardware-accelerated video decoding, rendering, and encoding on NVIDIA GPUs. 
+# nanaccel 🚀
 
-Unlike other software that wraps or spawns FFmpeg subprocesses, **NanAccel** is compiled into a single standalone binary that interacts directly with Windows Media Foundation (WMF), Direct3D 11, and NVIDIA NVENC APIs at the native C interface level.
+**nanaccel** is a next-generation, high-performance video CLI tool and engine built in pure Rust, designed as a lightweight and zero-dependency competitor to FFmpeg for hardware-accelerated video decoding, rendering, and encoding on NVIDIA GPUs. 
+
+Unlike other software that wraps or spawns FFmpeg subprocesses, **nanaccel** is compiled into a single standalone binary that interacts directly with Windows Media Foundation (WMF), Direct3D 11, and NVIDIA NVENC APIs at the native C interface level.
 
 ---
 
@@ -16,19 +20,25 @@ Unlike other software that wraps or spawns FFmpeg subprocesses, **NanAccel** is 
 
 ## 📂 Project Directory Structure
 
-A clean, standardized Rust and Git repository layout optimized for collaborative development:
-
 ```text
 nanaccel/
 ├── .github/
 │   └── workflows/
 │       └── ci.yml          # GitHub Actions CI workflow for builds & style checks
+├── docs/                   # Technical documentation
+│   ├── architecture.md     # Pipeline design and GPU flow diagram
+│   ├── getting_started.md  # Setup, requirements, and basic commands
+│   └── shaders.md          # HLSL Pixel Shader writing guide for video processing
 ├── src/
 │   ├── main.rs             # CLI router and live GPU telemetry reporter
 │   ├── gpu_pipeline/       # Direct WMF NVDEC -> D3D11 VPP -> NVENC GPU pipelines
 │   ├── commands/           # Modular subcommand parsing and handler functions
 │   └── mux.rs              # Native MP4 muxer for wrapping GPU stream packets
-├── .gitattributes          # Line-ending normalization and binary files handling
+├── nanaccel-windows-x86_64/
+│   ├── nanaccel.exe        # Pre-built release binary
+│   ├── grayscale.hlsl      # Sample HLSL pixel shader
+│   └── verify.py           # Automated diagnostic python script
+├── .gitattributes          # Line-ending normalization
 ├── .gitignore              # Dependency targets and workspace exclusions
 ├── Cargo.toml              # Build configurations and dependency definitions
 └── README.md               # User manual and project description
@@ -38,7 +48,7 @@ nanaccel/
 
 ## 🚀 Getting Started
 
-Launch commands via the CLI to check GPU capabilities, play, transcode, screenshot, or process subtitles, color, and audio:
+Launch commands via the CLI to check GPU capabilities, play, transcode, screenshot, or process HLSL shaders:
 
 ### 1. Show GPU Info & Telemetry
 Queries NVIDIA system telemetry for driver versions, active core utilization, VRAM metrics, power draw, and temperature:
@@ -46,16 +56,27 @@ Queries NVIDIA system telemetry for driver versions, active core utilization, VR
 nanaccel info
 ```
 
-### 2. GPU-Accelerated Playback
-Decodes and presents video directly into a Direct3D 11 window at native frame rates:
+### 2. GPU-Accelerated Interactive Playback
+Decodes and presents video directly into a hardware-accelerated Direct3D 11 window at native frame rates:
 ```bash
 nanaccel play path/to/video.mp4
 ```
+**Interactive Keyboard Controls:**
+* `Spacebar` : Play / Pause the video playback.
+* `Esc` / `Q` : Instantly close the player window and exit.
+
 **Options:**
 * `--no-audio` : Disables audio rendering.
 * `--loop` : Infinite loop playback.
 
-### 3. Pure GPU Transcoding
+### 3. GPU-to-GPU HLSL Filter Pipeline (Shaders)
+Compile a custom HLSL pixel shader file dynamically and run it on the video stream entirely on the GPU:
+```bash
+nanaccel shader input.mp4 output.mp4 path/to/shader.hlsl
+```
+*Processes the video frame loop completely on the GPU: Decoder (NV12) $\rightarrow$ Video Processor (RGBA) $\rightarrow$ Shader RTV (RGBA) $\rightarrow$ Video Processor (NV12) $\rightarrow$ NVENC.*
+
+### 4. Pure GPU Transcoding
 Transcodes H.264 or HEVC inputs directly on the GPU, with optional hardware scaling and custom bitrates:
 ```bash
 nanaccel transcode input.mp4 output.mp4 -c h264 -p p4 -b 5M --scale 1280x720
@@ -64,17 +85,15 @@ nanaccel transcode input.mp4 output.mp4 -c h264 -p p4 -b 5M --scale 1280x720
 * `-c, --codec <codec>` : Target codec (`h264`, `hevc`). Default is H.264.
 * `-p, --preset <preset>` : NVENC preset configuration from `p1` (fastest) to `p7` (highest quality).
 * `-b, --bitrate <bitrate>` : Target bitrate (e.g. `5M`, `800k`, `3000000`).
-* `--scale <width>x<height>` : High-speed GPU resizing. (e.g., `--scale 1920x1080`).
+* `--scale <width>x<height>` : High-speed GPU resizing (e.g., `--scale 1920x1080`).
 
-### 4. GPU-Accelerated Screenshot (Frame Extraction)
+### 5. GPU-Accelerated Screenshot (Frame Extraction)
 Decodes a specific frame on the GPU and saves it directly to a high-fidelity image file:
 ```bash
 nanaccel screenshot input.mp4 output.png -t 5000
 ```
 **Options:**
 * `-t, --time <ms>` : Timestamp in milliseconds (default: 0).
-**Supported Image Formats:**
-PNG, JPEG, BMP, TIFF, WebP, GIF, and HEIF/AVIF (fully hardware-decoded/saved using Windows Imaging Component (WIC)). EXR, HDR, and SVG formats are dynamically supported if WIC system extensions are registered on the host computer.
 
 ---
 
