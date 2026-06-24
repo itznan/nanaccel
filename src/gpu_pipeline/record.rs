@@ -292,7 +292,7 @@ pub fn record_gpu(
                 if let Some(m) = &mut muxer {
                     let is_keyframe =
                         encoded_bytes.contains(&0x05) || encoded_bytes.contains(&0x07);
-                    m.write_video_frame(encoded_bytes, (1000 / target_fps) as u32, is_keyframe)?;
+                    m.write_video_frame(encoded_bytes, 1000 / target_fps, is_keyframe)?;
                 }
             }
 
