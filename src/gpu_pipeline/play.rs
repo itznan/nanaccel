@@ -12,6 +12,9 @@ use windows::core::*;
 
 use super::get_texture_from_buffer;
 
+use std::sync::atomic::{AtomicBool, Ordering};
+static IS_PAUSED: AtomicBool = AtomicBool::new(false);
+
 unsafe extern "system" fn window_proc(
     hwnd: HWND,
     msg: u32,
@@ -20,6 +23,17 @@ unsafe extern "system" fn window_proc(
 ) -> LRESULT {
     unsafe {
         match msg {
+            WM_KEYDOWN => {
+                let key = wparam.0 as i32;
+                if key == 0x20 { // Space key
+                    let prev = IS_PAUSED.load(Ordering::Relaxed);
+                    IS_PAUSED.store(!prev, Ordering::Relaxed);
+                    println!("[NanAccel Video Player] {}", if !prev { "Paused" } else { "Resumed" });
+                } else if key == 0x1B || key == 0x51 { // ESC or Q key
+                    PostQuitMessage(0);
+                }
+                LRESULT(0)
+            }
             WM_DESTROY => {
                 PostQuitMessage(0);
                 LRESULT(0)
@@ -28,6 +42,7 @@ unsafe extern "system" fn window_proc(
         }
     }
 }
+
 
 pub fn create_video_window(width: u32, height: u32) -> Result<HWND> {
     unsafe {
@@ -82,6 +97,7 @@ pub fn play_gpu(
     loop_video: bool,
 ) -> std::result::Result<(), String> {
     unsafe {
+        IS_PAUSED.store(false, Ordering::Relaxed);
         // Init COM & WMF
         CoInitializeEx(None, COINIT_MULTITHREADED)
             .ok()
@@ -94,11 +110,12 @@ pub fn play_gpu(
         let mut feature_level = D3D_FEATURE_LEVEL_11_0;
         let levels = [D3D_FEATURE_LEVEL_11_0];
 
+        println!("[NanAccel Debug] Creating D3D11 Device with BGRA & Video support...");
         D3D11CreateDevice(
             None::<&IDXGIAdapter>,
             D3D_DRIVER_TYPE_HARDWARE,
             HMODULE(std::ptr::null_mut()),
-            D3D11_CREATE_DEVICE_BGRA_SUPPORT,
+            D3D11_CREATE_DEVICE_FLAG(D3D11_CREATE_DEVICE_BGRA_SUPPORT.0 | D3D11_CREATE_DEVICE_VIDEO_SUPPORT.0),
             Some(&levels),
             D3D11_SDK_VERSION,
             Some(&mut d3d_device as *mut _),
@@ -110,7 +127,11 @@ pub fn play_gpu(
         let device: ID3D11Device = d3d_device.unwrap();
         let context = d3d_context.unwrap();
 
-        // Create Device Manager
+        println!("[NanAccel Debug] Enabling multithread protection on D3D11 device...");
+        let multithread: ID3D11Multithread = device.cast().map_err(|e| format!("Cast to ID3D11Multithread failed: {}", e))?;
+        let _ = multithread.SetMultithreadProtected(true);
+
+        println!("[NanAccel Debug] Creating DXGI device manager...");
         let mut token = 0;
         let mut manager_opt = None;
         MFCreateDXGIDeviceManager(&mut token, &mut manager_opt)
@@ -119,6 +140,8 @@ pub fn play_gpu(
         manager
             .ResetDevice(&device, token)
             .map_err(|e| format!("ResetDevice failed: {}", e))?;
+
+        println!("[NanAccel Debug] Initializing Media Foundation source reader from URL: {} ...", input_path);
 
         // Create Attributes
         let mut attr_opt = None;
@@ -284,6 +307,11 @@ pub fn play_gpu(
                 if msg.message == WM_QUIT {
                     break 'playback;
                 }
+            }
+
+            if IS_PAUSED.load(Ordering::Relaxed) {
+                std::thread::sleep(Duration::from_millis(15));
+                continue;
             }
 
             let mut actual_stream_index = 0;
