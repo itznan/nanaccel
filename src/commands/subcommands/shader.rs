@@ -20,16 +20,16 @@ pub fn run(input: &str, output: &str, shader_file: &str) {
     println!("  Destination File : {}", output);
     println!("  HLSL Shader File : {}", shader_file);
 
-    println!("[D3D11] Initializing D3D11 device and swap chain...");
-    println!("[D3DCompiler] Compiling HLSL shader code (Target: ps_5_0)...");
-    println!("[D3D11] Binding Pixel Shader pipeline state object...");
-    println!("Executing shader passes on GPU video textures...");
-    println!("  - Pass 1: Sampling input texture coords");
-    println!("  - Pass 2: Executing HLSL kernel operations");
-    println!("  - Pass 3: Writing result to NVENC surface");
-
-    println!(
-        "\x1b[1m\x1b[32mShader filter pipeline completed successfully! Saved to: {}\x1b[0m",
-        output
-    );
+    let result = crate::gpu_pipeline::shader_gpu(input, output, shader_file);
+    match result {
+        Ok(_) => {
+            println!(
+                "\x1b[1m\x1b[32mShader filter pipeline completed successfully! Saved to: {}\x1b[0m",
+                output
+            );
+        }
+        Err(e) => {
+            eprintln!("\x1b[1m\x1b[31mShader pipeline failed: {}\x1b[0m", e);
+        }
+    }
 }
