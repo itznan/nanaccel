@@ -1,3 +1,4 @@
+use crate::commands::Commands;
 use crate::gpu_utils::{query_dynamic_gpu_stats, query_static_gpu_info};
 
 pub fn parse(_args: &[String]) -> Result<Commands, String> {
