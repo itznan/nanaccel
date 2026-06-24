@@ -77,7 +77,9 @@ pub fn shader_gpu(
             None::<&IDXGIAdapter>,
             D3D_DRIVER_TYPE_HARDWARE,
             HMODULE(std::ptr::null_mut()),
-            D3D11_CREATE_DEVICE_FLAG(D3D11_CREATE_DEVICE_BGRA_SUPPORT.0 | D3D11_CREATE_DEVICE_VIDEO_SUPPORT.0),
+            D3D11_CREATE_DEVICE_FLAG(
+                D3D11_CREATE_DEVICE_BGRA_SUPPORT.0 | D3D11_CREATE_DEVICE_VIDEO_SUPPORT.0,
+            ),
             Some(&levels),
             D3D11_SDK_VERSION,
             Some(&mut d3d_device as *mut _),
@@ -89,7 +91,9 @@ pub fn shader_gpu(
         let context = d3d_context.unwrap();
 
         // Enable multithread protection on D3D11 device
-        let multithread: ID3D11Multithread = device.cast().map_err(|e| format!("Cast to ID3D11Multithread failed: {}", e))?;
+        let multithread: ID3D11Multithread = device
+            .cast()
+            .map_err(|e| format!("Cast to ID3D11Multithread failed: {}", e))?;
         let _ = multithread.SetMultithreadProtected(true);
 
         // 2. Create Device Manager
@@ -148,8 +152,8 @@ pub fn shader_gpu(
             .map_err(|e| e.to_string())?;
 
         // 6. Compile Shaders
-        let shader_src = std::fs::read(shader_file)
-            .map_err(|e| format!("Failed to read shader file: {}", e))?;
+        let shader_src =
+            std::fs::read(shader_file).map_err(|e| format!("Failed to read shader file: {}", e))?;
 
         let mut vs_blob: Option<ID3DBlob> = None;
         let mut ps_blob: Option<ID3DBlob> = None;
@@ -183,8 +187,15 @@ pub fn shader_gpu(
         )
         .map_err(|e| {
             if let Some(err) = &error_blob {
-                let msg = std::slice::from_raw_parts(err.GetBufferPointer() as *const u8, err.GetBufferSize());
-                format!("VS Compile Error: {}\n{:?}", String::from_utf8_lossy(msg), e)
+                let msg = std::slice::from_raw_parts(
+                    err.GetBufferPointer() as *const u8,
+                    err.GetBufferSize(),
+                );
+                format!(
+                    "VS Compile Error: {}\n{:?}",
+                    String::from_utf8_lossy(msg),
+                    e
+                )
             } else {
                 format!("Failed to compile default vertex shader: {}", e)
             }
@@ -207,8 +218,15 @@ pub fn shader_gpu(
         )
         .map_err(|e| {
             if let Some(err) = &error_blob {
-                let msg = std::slice::from_raw_parts(err.GetBufferPointer() as *const u8, err.GetBufferSize());
-                format!("PS Compile Error: {}\n{:?}", String::from_utf8_lossy(msg), e)
+                let msg = std::slice::from_raw_parts(
+                    err.GetBufferPointer() as *const u8,
+                    err.GetBufferSize(),
+                );
+                format!(
+                    "PS Compile Error: {}\n{:?}",
+                    String::from_utf8_lossy(msg),
+                    e
+                )
             } else {
                 format!("Failed to compile pixel shader: {}", e)
             }
@@ -218,19 +236,29 @@ pub fn shader_gpu(
         let ps_blob = ps_blob.unwrap();
 
         let mut vs = None;
-        device.CreateVertexShader(
-            std::slice::from_raw_parts(vs_blob.GetBufferPointer() as *const u8, vs_blob.GetBufferSize()),
-            None,
-            Some(&mut vs)
-        ).map_err(|e| format!("CreateVertexShader failed: {}", e))?;
+        device
+            .CreateVertexShader(
+                std::slice::from_raw_parts(
+                    vs_blob.GetBufferPointer() as *const u8,
+                    vs_blob.GetBufferSize(),
+                ),
+                None,
+                Some(&mut vs),
+            )
+            .map_err(|e| format!("CreateVertexShader failed: {}", e))?;
         let vs = vs.unwrap();
 
         let mut ps = None;
-        device.CreatePixelShader(
-            std::slice::from_raw_parts(ps_blob.GetBufferPointer() as *const u8, ps_blob.GetBufferSize()),
-            None,
-            Some(&mut ps)
-        ).map_err(|e| format!("CreatePixelShader failed: {}", e))?;
+        device
+            .CreatePixelShader(
+                std::slice::from_raw_parts(
+                    ps_blob.GetBufferPointer() as *const u8,
+                    ps_blob.GetBufferSize(),
+                ),
+                None,
+                Some(&mut ps),
+            )
+            .map_err(|e| format!("CreatePixelShader failed: {}", e))?;
         let ps = ps.unwrap();
 
         // 7. Setup Textures and Video Processor
@@ -273,7 +301,10 @@ pub fn shader_gpu(
             MipLevels: 1,
             ArraySize: 1,
             Format: DXGI_FORMAT_R8G8B8A8_UNORM,
-            SampleDesc: DXGI_SAMPLE_DESC { Count: 1, Quality: 0 },
+            SampleDesc: DXGI_SAMPLE_DESC {
+                Count: 1,
+                Quality: 0,
+            },
             Usage: D3D11_USAGE_DEFAULT,
             BindFlags: D3D11_BIND_RENDER_TARGET.0 as u32 | D3D11_BIND_SHADER_RESOURCE.0 as u32,
             CPUAccessFlags: 0,
@@ -281,13 +312,15 @@ pub fn shader_gpu(
         };
 
         let mut rgba_tex = None;
-        device.CreateTexture2D(&rgba_desc, None, Some(&mut rgba_tex))
+        device
+            .CreateTexture2D(&rgba_desc, None, Some(&mut rgba_tex))
             .map_err(|e| format!("CreateTexture2D (RGBA) failed: {}", e))?;
         let rgba_tex = rgba_tex.unwrap();
 
         // Processed RGBA Texture
         let mut processed_tex = None;
-        device.CreateTexture2D(&rgba_desc, None, Some(&mut processed_tex))
+        device
+            .CreateTexture2D(&rgba_desc, None, Some(&mut processed_tex))
             .map_err(|e| format!("CreateTexture2D (Processed) failed: {}", e))?;
         let processed_tex = processed_tex.unwrap();
 
@@ -298,7 +331,10 @@ pub fn shader_gpu(
             MipLevels: 1,
             ArraySize: 1,
             Format: DXGI_FORMAT_NV12,
-            SampleDesc: DXGI_SAMPLE_DESC { Count: 1, Quality: 0 },
+            SampleDesc: DXGI_SAMPLE_DESC {
+                Count: 1,
+                Quality: 0,
+            },
             Usage: D3D11_USAGE_DEFAULT,
             BindFlags: D3D11_BIND_RENDER_TARGET.0 as u32 | D3D11_BIND_SHADER_RESOURCE.0 as u32,
             CPUAccessFlags: 0,
@@ -306,7 +342,8 @@ pub fn shader_gpu(
         };
 
         let mut nvenc_texture = None;
-        device.CreateTexture2D(&nv12_desc, None, Some(&mut nvenc_texture))
+        device
+            .CreateTexture2D(&nv12_desc, None, Some(&mut nvenc_texture))
             .map_err(|e| format!("CreateTexture2D (NVENC) failed: {}", e))?;
         let nvenc_texture = nvenc_texture.unwrap();
 
@@ -319,22 +356,36 @@ pub fn shader_gpu(
         };
 
         let mut output_view_rgba = None;
-        video_device.CreateVideoProcessorOutputView(&rgba_tex, &enumerator, &out_view_desc_rgba, Some(&mut output_view_rgba))
+        video_device
+            .CreateVideoProcessorOutputView(
+                &rgba_tex,
+                &enumerator,
+                &out_view_desc_rgba,
+                Some(&mut output_view_rgba),
+            )
             .map_err(|e| format!("CreateVideoProcessorOutputView (RGBA) failed: {}", e))?;
         let output_view_rgba = output_view_rgba.unwrap();
 
         let mut output_view_nv12 = None;
-        video_device.CreateVideoProcessorOutputView(&nvenc_texture, &enumerator, &out_view_desc_rgba, Some(&mut output_view_nv12))
+        video_device
+            .CreateVideoProcessorOutputView(
+                &nvenc_texture,
+                &enumerator,
+                &out_view_desc_rgba,
+                Some(&mut output_view_nv12),
+            )
             .map_err(|e| format!("CreateVideoProcessorOutputView (NV12) failed: {}", e))?;
         let output_view_nv12 = output_view_nv12.unwrap();
 
         let mut rtv_rgba = None;
-        device.CreateRenderTargetView(&processed_tex, None, Some(&mut rtv_rgba))
+        device
+            .CreateRenderTargetView(&processed_tex, None, Some(&mut rtv_rgba))
             .map_err(|e| format!("CreateRenderTargetView failed: {}", e))?;
         let rtv_rgba = rtv_rgba.unwrap();
 
         let mut srv_rgba = None;
-        device.CreateShaderResourceView(&rgba_tex, None, Some(&mut srv_rgba))
+        device
+            .CreateShaderResourceView(&rgba_tex, None, Some(&mut srv_rgba))
             .map_err(|e| format!("CreateShaderResourceView failed: {}", e))?;
         let srv_rgba = srv_rgba.unwrap();
 
@@ -350,7 +401,13 @@ pub fn shader_gpu(
         };
 
         let mut input_view_rgba = None;
-        video_device.CreateVideoProcessorInputView(&processed_tex, &enumerator, &in_view_desc_rgba, Some(&mut input_view_rgba))
+        video_device
+            .CreateVideoProcessorInputView(
+                &processed_tex,
+                &enumerator,
+                &in_view_desc_rgba,
+                Some(&mut input_view_rgba),
+            )
             .map_err(|e| format!("CreateVideoProcessorInputView failed: {}", e))?;
         let input_view_rgba = input_view_rgba.unwrap();
 
@@ -434,7 +491,6 @@ pub fn shader_gpu(
             if let Some(sample) = sample {
                 if let Ok(buffer) = sample.GetBufferByIndex(0) {
                     if let Ok(src_texture) = crate::gpu_pipeline::get_texture_from_buffer(&buffer) {
-                        
                         // Pass 1: YUV -> RGBA
                         let in_view_desc = D3D11_VIDEO_PROCESSOR_INPUT_VIEW_DESC {
                             FourCC: 0,
@@ -447,8 +503,16 @@ pub fn shader_gpu(
                             },
                         };
                         let mut input_view = None;
-                        video_device.CreateVideoProcessorInputView(&src_texture, &enumerator, &in_view_desc, Some(&mut input_view))
-                            .map_err(|e| format!("CreateVideoProcessorInputView (YUV) failed: {}", e))?;
+                        video_device
+                            .CreateVideoProcessorInputView(
+                                &src_texture,
+                                &enumerator,
+                                &in_view_desc,
+                                Some(&mut input_view),
+                            )
+                            .map_err(|e| {
+                                format!("CreateVideoProcessorInputView (YUV) failed: {}", e)
+                            })?;
                         let input_view = input_view.unwrap();
 
                         let stream = D3D11_VIDEO_PROCESSOR_STREAM {
@@ -465,8 +529,11 @@ pub fn shader_gpu(
                             ppFutureSurfacesRight: std::ptr::null_mut(),
                         };
 
-                        video_context.VideoProcessorBlt(&processor, &output_view_rgba, 0, &[stream])
-                            .map_err(|e| format!("VideoProcessorBlt (YUV -> RGBA) failed: {}", e))?;
+                        video_context
+                            .VideoProcessorBlt(&processor, &output_view_rgba, 0, &[stream])
+                            .map_err(|e| {
+                                format!("VideoProcessorBlt (YUV -> RGBA) failed: {}", e)
+                            })?;
 
                         // Pass 2: Run Custom HLSL Shader on the GPU
                         context.OMSetRenderTargets(Some(&[Some(rtv_rgba.clone())]), None);
@@ -484,15 +551,20 @@ pub fn shader_gpu(
                             PastFrames: 0,
                             FutureFrames: 0,
                             ppPastSurfaces: std::ptr::null_mut(),
-                            pInputSurface: std::mem::ManuallyDrop::new(Some(input_view_rgba.clone())),
+                            pInputSurface: std::mem::ManuallyDrop::new(Some(
+                                input_view_rgba.clone(),
+                            )),
                             ppFutureSurfaces: std::ptr::null_mut(),
                             ppPastSurfacesRight: std::ptr::null_mut(),
                             pInputSurfaceRight: std::mem::ManuallyDrop::new(None),
                             ppFutureSurfacesRight: std::ptr::null_mut(),
                         };
 
-                        video_context.VideoProcessorBlt(&processor, &output_view_nv12, 0, &[stream_rgba])
-                            .map_err(|e| format!("VideoProcessorBlt (RGBA -> YUV) failed: {}", e))?;
+                        video_context
+                            .VideoProcessorBlt(&processor, &output_view_nv12, 0, &[stream_rgba])
+                            .map_err(|e| {
+                                format!("VideoProcessorBlt (RGBA -> YUV) failed: {}", e)
+                            })?;
 
                         // Pass 4: Encode and Mux
                         let bitstream = encoder
@@ -532,7 +604,8 @@ pub fn shader_gpu(
 
                             if let Some(m) = &mut muxer {
                                 let frame_duration = (1000.0 / fps) as u32;
-                                let is_keyframe = encoded_bytes.contains(&0x05) || encoded_bytes.contains(&0x07);
+                                let is_keyframe =
+                                    encoded_bytes.contains(&0x05) || encoded_bytes.contains(&0x07);
                                 m.write_video_frame(encoded_bytes, frame_duration, is_keyframe)?;
                             }
                         }

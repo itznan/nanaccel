@@ -79,7 +79,9 @@ pub fn transcode_gpu(
             None::<&IDXGIAdapter>,
             D3D_DRIVER_TYPE_HARDWARE,
             HMODULE(std::ptr::null_mut()),
-            D3D11_CREATE_DEVICE_FLAG(D3D11_CREATE_DEVICE_BGRA_SUPPORT.0 | D3D11_CREATE_DEVICE_VIDEO_SUPPORT.0),
+            D3D11_CREATE_DEVICE_FLAG(
+                D3D11_CREATE_DEVICE_BGRA_SUPPORT.0 | D3D11_CREATE_DEVICE_VIDEO_SUPPORT.0,
+            ),
             Some(&levels),
             D3D11_SDK_VERSION,
             Some(&mut d3d_device as *mut _),
@@ -91,7 +93,9 @@ pub fn transcode_gpu(
         let context = d3d_context.unwrap();
 
         println!("[NanAccel Debug] Enabling multithread protection on D3D11 device...");
-        let multithread: ID3D11Multithread = device.cast().map_err(|e| format!("Cast to ID3D11Multithread failed: {}", e))?;
+        let multithread: ID3D11Multithread = device
+            .cast()
+            .map_err(|e| format!("Cast to ID3D11Multithread failed: {}", e))?;
         let _ = multithread.SetMultithreadProtected(true);
 
         println!("[NanAccel Debug] Creating DXGI device manager...");
@@ -104,7 +108,10 @@ pub fn transcode_gpu(
             .ResetDevice(&device, token)
             .map_err(|e| format!("ResetDevice failed: {}", e))?;
 
-        println!("[NanAccel Debug] Initializing Media Foundation source reader from URL: {} ...", input_path);
+        println!(
+            "[NanAccel Debug] Initializing Media Foundation source reader from URL: {} ...",
+            input_path
+        );
 
         // 3. Create Attributes
         let mut attr_opt = None;

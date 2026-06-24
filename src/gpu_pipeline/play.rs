@@ -25,11 +25,16 @@ unsafe extern "system" fn window_proc(
         match msg {
             WM_KEYDOWN => {
                 let key = wparam.0 as i32;
-                if key == 0x20 { // Space key
+                if key == 0x20 {
+                    // Space key
                     let prev = IS_PAUSED.load(Ordering::Relaxed);
                     IS_PAUSED.store(!prev, Ordering::Relaxed);
-                    println!("[NanAccel Video Player] {}", if !prev { "Paused" } else { "Resumed" });
-                } else if key == 0x1B || key == 0x51 { // ESC or Q key
+                    println!(
+                        "[NanAccel Video Player] {}",
+                        if !prev { "Paused" } else { "Resumed" }
+                    );
+                } else if key == 0x1B || key == 0x51 {
+                    // ESC or Q key
                     PostQuitMessage(0);
                 }
                 LRESULT(0)
@@ -42,7 +47,6 @@ unsafe extern "system" fn window_proc(
         }
     }
 }
-
 
 pub fn create_video_window(width: u32, height: u32) -> Result<HWND> {
     unsafe {
@@ -115,7 +119,9 @@ pub fn play_gpu(
             None::<&IDXGIAdapter>,
             D3D_DRIVER_TYPE_HARDWARE,
             HMODULE(std::ptr::null_mut()),
-            D3D11_CREATE_DEVICE_FLAG(D3D11_CREATE_DEVICE_BGRA_SUPPORT.0 | D3D11_CREATE_DEVICE_VIDEO_SUPPORT.0),
+            D3D11_CREATE_DEVICE_FLAG(
+                D3D11_CREATE_DEVICE_BGRA_SUPPORT.0 | D3D11_CREATE_DEVICE_VIDEO_SUPPORT.0,
+            ),
             Some(&levels),
             D3D11_SDK_VERSION,
             Some(&mut d3d_device as *mut _),
@@ -128,7 +134,9 @@ pub fn play_gpu(
         let context = d3d_context.unwrap();
 
         println!("[NanAccel Debug] Enabling multithread protection on D3D11 device...");
-        let multithread: ID3D11Multithread = device.cast().map_err(|e| format!("Cast to ID3D11Multithread failed: {}", e))?;
+        let multithread: ID3D11Multithread = device
+            .cast()
+            .map_err(|e| format!("Cast to ID3D11Multithread failed: {}", e))?;
         let _ = multithread.SetMultithreadProtected(true);
 
         println!("[NanAccel Debug] Creating DXGI device manager...");
@@ -141,7 +149,10 @@ pub fn play_gpu(
             .ResetDevice(&device, token)
             .map_err(|e| format!("ResetDevice failed: {}", e))?;
 
-        println!("[NanAccel Debug] Initializing Media Foundation source reader from URL: {} ...", input_path);
+        println!(
+            "[NanAccel Debug] Initializing Media Foundation source reader from URL: {} ...",
+            input_path
+        );
 
         // Create Attributes
         let mut attr_opt = None;

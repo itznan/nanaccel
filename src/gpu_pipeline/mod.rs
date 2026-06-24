@@ -1,12 +1,12 @@
 pub mod play;
 pub mod screenshot;
-pub mod transcode;
 pub mod shader;
+pub mod transcode;
 
 pub use play::play_gpu;
 pub use screenshot::screenshot_gpu;
-pub use transcode::transcode_gpu;
 pub use shader::shader_gpu;
+pub use transcode::transcode_gpu;
 
 // Shared GPU helper
 use windows::Win32::Graphics::Direct3D11::ID3D11Texture2D;
