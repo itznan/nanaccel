@@ -305,12 +305,10 @@ pub fn play_gpu(
         let output_view = output_view.unwrap();
 
         // Loop
-        let frame_delay = Duration::from_secs_f64(1.0 / fps);
+        let mut start_time = Instant::now();
         let mut msg = MSG::default();
 
         'playback: loop {
-            let frame_start = Instant::now();
-
             // Process window messages
             while PeekMessageW(&mut msg, None, 0, 0, PM_REMOVE).as_bool() {
                 let _ = TranslateMessage(&msg);
@@ -322,6 +320,7 @@ pub fn play_gpu(
 
             if IS_PAUSED.load(Ordering::Relaxed) {
                 std::thread::sleep(Duration::from_millis(15));
+                start_time += Duration::from_millis(15);
                 continue;
             }
 
@@ -352,6 +351,7 @@ pub fn play_gpu(
                             &var as *const PROPVARIANT,
                         )
                         .map_err(|e| format!("Loop seek failed: {}", e))?;
+                    start_time = Instant::now();
                     continue;
                 } else {
                     break 'playback;
@@ -410,9 +410,11 @@ pub fn play_gpu(
                 }
             }
 
-            let elapsed_frame = frame_start.elapsed();
-            if elapsed_frame < frame_delay {
-                std::thread::sleep(frame_delay - elapsed_frame);
+            // Wait/align based on actual presentation timestamp (timestamp is in 100ns units)
+            let expected_time = start_time + Duration::from_nanos(timestamp as u64 * 100);
+            let now = Instant::now();
+            if now < expected_time {
+                std::thread::sleep(expected_time - now);
             }
         }
 

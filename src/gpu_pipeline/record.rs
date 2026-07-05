@@ -172,6 +172,8 @@ pub fn record_gpu(
             )
             .map_err(|e| format!("Preset config failed: {:?}", e))?;
 
+        nv_config.preset_cfg.frame_interval_p = 1;
+
         // Bitrate
         let mut val = 8_000_000;
         if let Some(br_str) = bitrate {
@@ -228,14 +230,22 @@ pub fn record_gpu(
             target_duration
         );
 
+        let start_time = Instant::now();
+
         while frame_count < total_frames {
-            let loop_start = Instant::now();
+            // Self-correcting alignment sleep
+            let target_time = start_time + frame_duration * frame_count as u32;
+            let now = Instant::now();
+            if now < target_time {
+                std::thread::sleep(target_time - now);
+            }
+
             let mut frame_info = DXGI_OUTDUPL_FRAME_INFO::default();
             let mut desktop_resource: Option<IDXGIResource> = None;
 
-            // Acquire desktop frame
+            // Acquire desktop frame with a short timeout
             let acquired =
-                match duplication.AcquireNextFrame(10, &mut frame_info, &mut desktop_resource) {
+                match duplication.AcquireNextFrame(5, &mut frame_info, &mut desktop_resource) {
                     Ok(_) => {
                         let res = desktop_resource.unwrap();
                         let tex: ID3D11Texture2D = res.cast().map_err(|e| e.to_string())?;
@@ -303,11 +313,6 @@ pub fn record_gpu(
             }
 
             frame_count += 1;
-
-            let elapsed = loop_start.elapsed();
-            if elapsed < frame_duration {
-                std::thread::sleep(frame_duration - elapsed);
-            }
         }
 
         if let Some(m) = muxer {

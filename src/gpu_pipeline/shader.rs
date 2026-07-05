@@ -423,6 +423,8 @@ pub fn shader_gpu(
             )
             .map_err(|e| format!("Preset config failed: {:?}", e))?;
 
+        nv_config.preset_cfg.frame_interval_p = 1;
+
         let init_params = InitParams {
             encode_guid: nvenc::sys::guids::NV_ENC_CODEC_H264_GUID.clone(),
             preset_guid: nvenc::sys::guids::NV_ENC_PRESET_P4_GUID.clone(),
@@ -602,12 +604,17 @@ pub fn shader_gpu(
                                 )?);
                             }
 
-                            if let Some(m) = &mut muxer {
-                                let frame_duration = (1000.0 / fps) as u32;
-                                let is_keyframe =
-                                    encoded_bytes.contains(&0x05) || encoded_bytes.contains(&0x07);
-                                m.write_video_frame(encoded_bytes, frame_duration, is_keyframe)?;
-                            }
+                             if let Some(m) = &mut muxer {
+                                 let mut frame_duration = (1000.0 / fps) as u32;
+                                 if let Ok(sample_dur) = sample.GetSampleDuration() {
+                                     if sample_dur > 0 {
+                                         frame_duration = (sample_dur / 10000) as u32;
+                                     }
+                                 }
+                                 let is_keyframe =
+                                     encoded_bytes.contains(&0x05) || encoded_bytes.contains(&0x07);
+                                 m.write_video_frame(encoded_bytes, frame_duration, is_keyframe)?;
+                             }
                         }
 
                         frame_count += 1;

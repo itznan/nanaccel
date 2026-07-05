@@ -290,6 +290,8 @@ pub fn transcode_gpu(
             )
             .map_err(|e| format!("Preset config failed: {:?}", e))?;
 
+        nv_config.preset_cfg.frame_interval_p = 1;
+
         // Bitrate setup
         if let Some(br_str) = bitrate {
             let mut val = 5_000_000;
@@ -448,7 +450,12 @@ pub fn transcode_gpu(
 
                             if let Some(m) = &mut muxer {
                                 // Frame duration in milliseconds
-                                let frame_duration = (1000.0 / fps) as u32;
+                                let mut frame_duration = (1000.0 / fps) as u32;
+                                if let Ok(sample_dur) = sample.GetSampleDuration() {
+                                    if sample_dur > 0 {
+                                        frame_duration = (sample_dur / 10000) as u32;
+                                    }
+                                }
                                 let is_hevc = codec.to_lowercase() == "hevc";
                                 let is_keyframe = if is_hevc {
                                     // HEVC keyframe check (NAL unit type 19 or 20)
